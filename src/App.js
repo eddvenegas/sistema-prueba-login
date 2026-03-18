@@ -1,23 +1,28 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import LoginForm from './components/LoginForm';
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  if (!user) {
+    return <LoginForm onLoginSuccess={(userData) => setUser(userData)} />;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {user.role === 'especialista' ? (
+        <div className="p-10 text-center">
+          <h1 className="text-3xl font-bold">Bienvenido Especialista</h1>
+          <p>Aquí verás las carpetas de todos los colegios.</p>
+          <button onClick={() => setUser(null)} className="mt-4 text-blue-500 underline">Cerrar Sesión</button>
+        </div>
+      ) : (
+        <div className="p-10 text-center">
+          <h1 className="text-3xl font-bold">Panel de Director: {user.school}</h1>
+          <p>Aquí verás tu planilla de gastos para llenar.</p>
+          <button onClick={() => setUser(null)} className="mt-4 text-blue-500 underline">Cerrar Sesión</button>
+        </div>
+      )}
     </div>
   );
 }
