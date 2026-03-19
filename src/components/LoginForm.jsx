@@ -22,9 +22,14 @@ const LoginForm = ({ onLoginSuccess }) => {
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-        {/* Logo simulado */}
-        <div className="bg-gray-200 w-20 h-12 mx-auto mb-6 flex items-center justify-center rounded">
-           <span className="text-xs text-gray-500 font-bold uppercase text-center">Logo UGEL</span>
+        {/* Logo Real desde URL */}
+        <div className="mb-6 flex justify-center">
+          <img 
+            src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
+            alt="Logo UGEL" 
+            className="h-16 w-auto object-contain" 
+            onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo+UGEL' }}
+          />
         </div>
 
         <h1 className="text-2xl font-bold text-slate-800 mb-2">
@@ -41,7 +46,7 @@ const LoginForm = ({ onLoginSuccess }) => {
               <input
                 type="text"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 pl-10 pr-4 outline-none focus:border-blue-500 transition-colors"
-                placeholder="Correo institucional o DNI"
+                placeholder="DNI"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 required
