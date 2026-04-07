@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ocultar el icono de revelar contraseña nativo de Edge/Chrome */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
