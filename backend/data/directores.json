@@ -1,0 +1,178 @@
+{
+  "instituciones_educativas": [
+    {
+      "id": 1,
+      "codigo_modular": "0359323",
+      "nombre_ie": "FE Y ALEGRIA 42",
+      "nivel_educativo": "primaria",
+      "modalidad": "especial",
+      "provincia": "SANTA",
+      "distrito": "CHIMBOTE"
+    },
+    {
+      "id": 2,
+      "codigo_modular": "0495234",
+      "nombre_ie": "FE Y ALEGRIA 14",
+      "nivel_educativo": "secundaria",
+      "modalidad": "regular",
+      "provincia": "SANTA",
+      "distrito": "CHIMBOTE"
+    },
+    {
+      "id": 3,
+      "codigo_modular": "0577098",
+      "nombre_ie": "FE Y ALEGRIA 16",
+      "nivel_educativo": "secundaria",
+      "modalidad": "regular",
+      "provincia": "SANTA",
+      "distrito": "CHIMBOTE"
+    },
+    {
+      "id": 4,
+      "codigo_modular": "0686600",
+      "nombre_ie": "88227 PEDRO PABLO ATUSPARIA",
+      "nivel_educativo": "secundaria",
+      "modalidad": "regular",
+      "provincia": "SANTA",
+      "distrito": "NUEVO CHIMBOTE"
+    },
+    {
+      "id": 5,
+      "codigo_modular": "0359356",
+      "nombre_ie": "INMACULADA DE LA MERCED",
+      "nivel_educativo": "secundaria",
+      "modalidad": "regular",
+      "provincia": "SANTA",
+      "distrito": "CHIMBOTE"
+    },
+    {
+      "id": 6,
+      "codigo_modular": "0570226",
+      "nombre_ie": "01 CHIMBOTE",
+      "nivel_educativo": "primaria",
+      "modalidad": "especial",
+      "provincia": "SANTA",
+      "distrito": "CHIMBOTE"
+    }
+  ],
+  "directores": [
+    {
+      "id": 1,
+      "dni": "32970728",
+      "nombres": "SARAI REBECA",
+      "apellido_paterno": "BERNABE",
+      "apellido_materno": "MAGUIÑA",
+      "celular": "949833586",
+      "email": "sariber19@hotmail.com",
+      "institucion_id": 1
+    },
+    {
+      "id": 2,
+      "dni": "87654321",
+      "nombres": "EDEFIR CUSTODIO",
+      "apellido_paterno": "VIERA",
+      "apellido_materno": "LOPEZ",
+      "celular": "938107374",
+      "email": "custodioviera1967@hotmail.com",
+      "institucion_id": 2
+    },
+    {
+      "id": 3,
+      "dni": "00000000",
+      "nombres": "HAYDEE",
+      "apellido_paterno": "SANCHEZ",
+      "apellido_materno": "PORTAL de TAPIA",
+      "celular": "966854853",
+      "email": "",
+      "institucion_id": 3
+    },
+    {
+      "id": 4,
+      "dni": "32908230",
+      "nombres": "ROSALBINA LIDIA",
+      "apellido_paterno": "RODRIGUEZ",
+      "apellido_materno": "LUNA",
+      "celular": "943810871",
+      "email": "yedadero@hotmail.com",
+      "institucion_id": 4
+    },
+    {
+      "id": 5,
+      "dni": "22222222",
+      "nombres": "CAROLINA VIRGINIA",
+      "apellido_paterno": "ROSPIGLIOSI",
+      "apellido_materno": "LEYVA",
+      "celular": "944661493",
+      "email": "carolinarospigliosi@hotmail.com",
+      "institucion_id": 5
+    },
+    {
+      "id": 6,
+      "dni": "10126811",
+      "nombres": "DARIA REINA",
+      "apellido_paterno": "SANCHEZ",
+      "apellido_materno": "CHAVEZ",
+      "celular": "949377272",
+      "email": "daryexpaxmo@hotmail.com",
+      "institucion_id": 6
+    }
+  ],
+  "usuarios": [
+    {
+      "id": 1,
+      "email": "sariber19@hotmail.com",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567890",
+      "rol": "director",
+      "director_id": 1,
+      "estado": "activo"
+    },
+    {
+      "id": 2,
+      "email": "custodioviera1967@hotmail.com",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567891",
+      "rol": "director",
+      "director_id": 2,
+      "estado": "activo"
+    },
+    {
+      "id": 3,
+      "email": "",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567892",
+      "rol": "director",
+      "director_id": 3,
+      "estado": "activo"
+    },
+    {
+      "id": 4,
+      "email": "yedadero@hotmail.com",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567893",
+      "rol": "director",
+      "director_id": 4,
+      "estado": "activo"
+    },
+    {
+      "id": 5,
+      "email": "carolinarospigliosi@hotmail.com",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567894",
+      "rol": "director",
+      "director_id": 5,
+      "estado": "activo"
+    },
+    {
+      "id": 6,
+      "email": "daryexpaxmo@hotmail.com",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567895",
+      "rol": "director",
+      "director_id": 6,
+      "estado": "activo"
+    },
+    {
+      "id": 7,
+      "email": "especialista@ugel.edu.pe",
+      "password_hash": "$2a$10$abcdef1234567890abcdef1234567893",
+      "rol": "especialista",
+      "director_id": null,
+      "estado": "activo"
+    }
+  ]
+}
