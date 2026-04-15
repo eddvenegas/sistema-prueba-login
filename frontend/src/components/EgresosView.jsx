@@ -3,6 +3,32 @@ import { Plus, Save, CalendarDays, X } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api/movimientos/egresos';
 
+const TIPOS_COMPROBANTE = [
+  'Factura',
+  'Boleta',
+  'Recibo por Honorarios',
+  'Declaración Jurada',
+];
+
+const normalizarTexto = (valor) => (
+  String(valor || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+);
+
+const MAPA_TIPOS_COMPROBANTE = {
+  factura: 'Factura',
+  boleta: 'Boleta',
+  'recibo por honorarios': 'Recibo por Honorarios',
+  'declaracion jurada': 'Declaración Jurada',
+};
+
+const normalizarTipoComprobante = (tipo) => (
+  MAPA_TIPOS_COMPROBANTE[normalizarTexto(tipo)] || ''
+);
+
 const crearFilaVacia = () => ({
   id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   fecha: '',
@@ -16,6 +42,14 @@ const formatearFechaApi = (fecha) => {
   if (!fecha) return '';
   return String(fecha).split('T')[0];
 };
+
+const filaTieneContenido = (fila) => (
+  Boolean(fila.fecha)
+  || Boolean(String(fila.numero || '').trim())
+  || Boolean(String(fila.concepto || '').trim())
+  || Number(fila.importe || 0) > 0
+  || Boolean(String(fila.tipo || '').trim())
+);
 
 const leerRespuestaJson = async (response) => {
   const rawText = await response.text();
@@ -38,6 +72,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId }) => {
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  const [filasTipoInvalido, setFilasTipoInvalido] = useState(new Set());
   const [datosMeses, setDatosMeses] = useState([
     [crearFilaVacia()],
     [crearFilaVacia()],
@@ -97,7 +132,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId }) => {
             agrupados[monthOffset].push({
               id: registro.id,
               fecha: formatearFechaApi(registro.fecha),
-              tipo: registro.tipo_comprobante || '',
+              tipo: normalizarTipoComprobante(registro.tipo_comprobante),
               numero: registro.numero_comprobante || '',
               concepto: registro.concepto || '',
               importe: registro.monto ?? 0,
@@ -129,6 +164,15 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId }) => {
       ));
       return nuevosDatos;
     });
+
+    if (campo === 'tipo' && TIPOS_COMPROBANTE.includes(valor)) {
+      setFilasTipoInvalido((prev) => {
+        if (!prev.has(filaId)) return prev;
+        const next = new Set(prev);
+        next.delete(filaId);
+        return next;
+      });
+    }
   };
 
   const agregarFila = (mesIndex) => {
@@ -186,7 +230,22 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId }) => {
       monto: fila.importe,
     }));
 
+    const filasSinTipo = datosMeses[mesActivo]
+      .map((fila, index) => ({ fila, index }))
+      .filter(({ fila }) => filaTieneContenido(fila) && !TIPOS_COMPROBANTE.includes(fila.tipo))
+      .map(({ index }) => index + 1);
+    const filaIdsSinTipo = datosMeses[mesActivo]
+      .filter((fila) => filaTieneContenido(fila) && !TIPOS_COMPROBANTE.includes(fila.tipo))
+      .map((fila) => fila.id);
+
+    if (filasSinTipo.length > 0) {
+      setFilasTipoInvalido(new Set(filaIdsSinTipo));
+      setError(`Selecciona el Tipo de Comprobante en la(s) fila(s): ${filasSinTipo.join(', ')}.`);
+      return;
+    }
+
     setSaving(true);
+    setFilasTipoInvalido(new Set());
     setError('');
     setMensaje('');
 
@@ -316,12 +375,21 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId }) => {
                     </button>
                   </td>
                   <td className="border border-gray-300 p-1">
-                    <input
-                      type="text"
+                    <select
                       value={fila.tipo}
                       onChange={(e) => handleInputChange(mesActivo, fila.id, 'tipo', e.target.value)}
-                      className={inputClass}
-                    />
+                      className={`${inputClass} ${filasTipoInvalido.has(fila.id) ? 'border border-red-500 rounded' : ''}`}
+                    >
+                      <option value="">Seleccionar</option>
+                      {TIPOS_COMPROBANTE.map((tipo) => (
+                        <option key={tipo} value={tipo}>
+                          {tipo}
+                        </option>
+                      ))}
+                    </select>
+                    {filasTipoInvalido.has(fila.id) && (
+                      <p className="px-1 pt-1 text-xs text-red-600">Campo obligatorio</p>
+                    )}
                   </td>
                   <td className="border border-gray-300 p-1">
                     <input

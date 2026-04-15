@@ -69,7 +69,7 @@ const login = async (req, res) => {
     if (usuario.director_id) {
       console.log('🎓 Buscando datos del director con id:', usuario.director_id);
       const [directores] = await connection.execute(
-        'SELECT d.id, d.dni, d.nombres, d.apellido_paterno, d.apellido_materno, d.email, d.institucion_id, ie.nombre_ie FROM directores d JOIN instituciones_educativas ie ON d.institucion_id = ie.id WHERE d.id = ?',
+        'SELECT d.id, d.dni, d.nombres, d.apellido_paterno, d.apellido_materno, d.celular, d.email, d.institucion_id, ie.nombre_ie FROM directores d JOIN instituciones_educativas ie ON d.institucion_id = ie.id WHERE d.id = ?',
         [usuario.director_id]
       );
 
@@ -98,6 +98,7 @@ const login = async (req, res) => {
           nombres: directorData.nombres,
           apellido_paterno: directorData.apellido_paterno,
           apellido_materno: directorData.apellido_materno,
+          celular: directorData.celular,
           email: directorData.email,
           school: directorData.nombre_ie,
           institucion_id: directorData.institucion_id

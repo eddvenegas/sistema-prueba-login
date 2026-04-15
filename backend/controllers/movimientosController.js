@@ -7,10 +7,35 @@ const TABLAS_PERMITIDAS = {
 
 const obtenerTabla = (tipo) => TABLAS_PERMITIDAS[tipo];
 
+const normalizarTexto = (valor) => String(valor || '')
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '');
+
+const MAPA_TIPOS_COMPROBANTE = {
+  factura: 'Factura',
+  boleta: 'Boleta',
+  'recibo por honorarios': 'Recibo por Honorarios',
+  'declaracion jurada': 'Declaración Jurada',
+};
+
+const normalizarTipoComprobante = (tipo) => (
+  MAPA_TIPOS_COMPROBANTE[normalizarTexto(tipo)] || ''
+);
+
+const registroTieneContenido = (registro) => (
+  Boolean(registro?.fecha)
+  || Boolean(String(registro?.numero_comprobante || '').trim())
+  || Boolean(String(registro?.concepto || '').trim())
+  || Number(registro?.monto || 0) > 0
+  || Boolean(String(registro?.tipo_comprobante || '').trim())
+);
+
 const validarRegistro = (registro) => (
   registro
   && registro.fecha
-  && registro.tipo_comprobante?.trim()
+  && normalizarTipoComprobante(registro.tipo_comprobante)
   && registro.numero_comprobante?.trim()
   && registro.concepto?.trim()
   && registro.monto !== ''
@@ -66,11 +91,23 @@ const guardarMovimientos = async (req, res) => {
     });
   }
 
+  const filasTipoInvalido = registros
+    .map((registro, index) => ({ registro, index }))
+    .filter(({ registro }) => registroTieneContenido(registro) && !normalizarTipoComprobante(registro.tipo_comprobante))
+    .map(({ index }) => index + 1);
+
+  if (filasTipoInvalido.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Tipo de comprobante inválido en la(s) fila(s): ${filasTipoInvalido.join(', ')}.`,
+    });
+  }
+
   const registrosValidos = registros
     .filter(validarRegistro)
     .map((registro) => ({
       fecha: registro.fecha,
-      tipo_comprobante: registro.tipo_comprobante.trim(),
+      tipo_comprobante: normalizarTipoComprobante(registro.tipo_comprobante),
       numero_comprobante: registro.numero_comprobante.trim(),
       concepto: registro.concepto.trim(),
       monto: Number(registro.monto),

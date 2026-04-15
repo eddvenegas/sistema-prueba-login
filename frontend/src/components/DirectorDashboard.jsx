@@ -3,6 +3,7 @@ import { Settings } from 'lucide-react';
 import DirectorSidebar from './DirectorSidebar';
 import LogoutModal from './LogoutModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import ConsolidadoView from './ConsolidadoView';
 import InformeGeneralView from './InformeGeneralView';
 import IngresosView from './IngresosView';
 import EgresosView from './EgresosView';
@@ -56,7 +57,7 @@ const DirectorDashboard = ({ user, onLogout }) => {
         </div>
 
         {activeTab === 'general' && (
-          <InformeGeneralView trimestreId={trimestreId} schoolName={user.director?.school} />
+          <ConsolidadoView trimestreId={trimestreId} schoolName={user.director?.school} />
         )}
 
         {activeTab === 'ingresos' && (
@@ -87,6 +88,7 @@ const DirectorDashboard = ({ user, onLogout }) => {
           />
         )}
         {activeTab === 'facturas' && <SubirFacturasView trimestreMeses={periodos[trimestreId]} />}
+        {activeTab === 'informe' && <InformeGeneralView director={user.director} />}
       </main>
     </div>
   );

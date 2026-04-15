@@ -4,10 +4,11 @@ import { LayoutDashboard, FolderOpen, UploadCloud, LogOut } from 'lucide-react';
 const DirectorSidebar = ({ activeTab, setActiveTab, onLogoutClick }) => {
   // Las opciones de tu menú actual
   const menuItems = [
-    { id: 'general', label: 'INFORME GENERAL', icon: <LayoutDashboard size={18} /> },
+    { id: 'general', label: 'CONSOLIDADO', icon: <LayoutDashboard size={18} /> },
     { id: 'ingresos', label: 'INGRESOS', icon: <FolderOpen size={18} /> },
     { id: 'egresos', label: 'EGRESOS', icon: <FolderOpen size={18} /> },
     { id: 'facturas', label: 'SUBIR FACTURAS', icon: <UploadCloud size={18} /> },
+    { id: 'informe', label: 'INFORME GENERAL', icon: <LayoutDashboard size={18} /> },
   ];
 
   return (
