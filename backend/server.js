@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
@@ -5,10 +7,14 @@ const movimientosRoutes = require('./routes/movimientos');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:3000', // URL de tu React
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(express.json());
