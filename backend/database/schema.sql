@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   id                      INT AUTO_INCREMENT PRIMARY KEY,
   email                   VARCHAR(150) UNIQUE NOT NULL COMMENT 'Email para login',
   password_hash           VARCHAR(255) NOT NULL COMMENT 'Contraseña hasheada con bcrypt',
+  debe_cambiar_password   BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Obliga al usuario a cambiar su clave en el primer ingreso',
   rol                     ENUM('director', 'especialista', 'admin') NOT NULL DEFAULT 'director',
   director_id             INT UNIQUE COMMENT 'FK opcional: si es director, referencia a tabla directores',
   estado                  ENUM('activo', 'inactivo', 'suspendido') DEFAULT 'activo',
@@ -81,7 +82,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   INDEX idx_email (email),
   INDEX idx_rol (rol),
   INDEX idx_estado (estado),
-  INDEX idx_director_id (director_id)
+  INDEX idx_director_id (director_id),
+  INDEX idx_debe_cambiar_password (debe_cambiar_password)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Tabla de usuarios para autenticación en el sistema';
 
@@ -244,11 +246,11 @@ INSERT INTO directores (dni, nombres, apellido_paterno, apellido_materno, celula
 -- Insertar usuarios (para login)
 -- Contraseña por defecto: 123456 (hash bcrypt)
 -- Los directores deben cambiar su contraseña en el primer login
-INSERT INTO usuarios (email, password_hash, rol, director_id, estado) VALUES
-('sariber19@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 1, 'activo'),
-('custodioviera1967@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 2, 'activo'),
-('', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 3, 'activo'),
-('yedadero@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 4, 'activo'),
-('carolinarospigliosi@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 5, 'activo'),
-('daryexpaxmo@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'director', 6, 'activo'),
-('especialista@ugel.edu.pe', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', 'especialista', NULL, 'activo');
+INSERT INTO usuarios (email, password_hash, debe_cambiar_password, rol, director_id, estado) VALUES
+('sariber19@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 1, 'activo'),
+('custodioviera1967@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 2, 'activo'),
+('', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 3, 'activo'),
+('yedadero@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 4, 'activo'),
+('carolinarospigliosi@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 5, 'activo'),
+('daryexpaxmo@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 6, 'activo'),
+('especialista@ugel.edu.pe', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', FALSE, 'especialista', NULL, 'activo');

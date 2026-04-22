@@ -78,11 +78,29 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [filasTipoInvalido, setFilasTipoInvalido] = useState(new Set());
+  const [hayBorradores, setHayBorradores] = useState({ 0: false, 1: false, 2: false });
+  const [reloadTrigger, setReloadTrigger] = useState(0);
   const [datosMeses, setDatosMeses] = useState([
     [crearFilaVacia()],
     [crearFilaVacia()],
     [crearFilaVacia()],
   ]);
+
+  // Función para guardar el borrador del mes actual en LocalStorage
+  const guardarBorradorMensual = (mesIndex, datosMes) => {
+    if (!directorId || !trimestreId || trimestreCerrado) return;
+    const key = `draft_ingresos_${directorId}_${trimestreId}_${mesIndex}`;
+    localStorage.setItem(key, JSON.stringify(datosMes));
+    setHayBorradores((prev) => ({ ...prev, [mesIndex]: true }));
+  };
+
+  const descartarBorrador = (mesIndex) => {
+    if (!window.confirm('¿Descartar cambios no guardados y recuperar los datos originales del servidor?')) return;
+    const key = `draft_ingresos_${directorId}_${trimestreId}_${mesIndex}`;
+    localStorage.removeItem(key);
+    setHayBorradores((prev) => ({ ...prev, [mesIndex]: false }));
+    setReloadTrigger((prev) => prev + 1); // Dispara la recarga de datos del backend
+  };
 
   useEffect(() => {
     setMesActivo(0);
@@ -147,11 +165,26 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
           }
         });
 
-        setDatosMeses(
-          agrupados.map((mesRegistros) => (
-            mesRegistros.length > 0 ? mesRegistros : [crearFilaVacia()]
-          ))
-        );
+        const borradoresEncontrados = { 0: false, 1: false, 2: false };
+
+        // Mezclar datos de la BD con los borradores locales si existen
+        const baseDatosMeses = agrupados.map((mesRegistros, index) => {
+          const key = `draft_ingresos_${directorId}_${trimestreId}_${index}`;
+          const draftStr = localStorage.getItem(key);
+          
+          if (draftStr && !trimestreCerrado) {
+            try {
+              borradoresEncontrados[index] = true;
+              return JSON.parse(draftStr);
+            } catch (e) {
+              // Si el JSON falla, usamos los del backend
+            }
+          }
+          return mesRegistros.length > 0 ? mesRegistros : [crearFilaVacia()];
+        });
+
+        setHayBorradores(borradoresEncontrados);
+        setDatosMeses(baseDatosMeses);
       } catch (loadError) {
         console.error(loadError);
         setError(loadError.message || 'Error cargando los ingresos.');
@@ -161,7 +194,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     };
 
     cargarIngresos();
-  }, [directorId, trimestreId]);
+  }, [directorId, trimestreId, reloadTrigger, trimestreCerrado]);
 
   const handleInputChange = (mesIndex, filaId, campo, valor) => {
     setDatosMeses((prevDatos) => {
@@ -169,6 +202,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       nuevosDatos[mesIndex] = nuevosDatos[mesIndex].map((fila) => (
         fila.id === filaId ? { ...fila, [campo]: valor } : fila
       ));
+      guardarBorradorMensual(mesIndex, nuevosDatos[mesIndex]);
       return nuevosDatos;
     });
 
@@ -188,6 +222,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     setDatosMeses((prevDatos) => {
       const nuevosDatos = [...prevDatos];
       nuevosDatos[mesIndex] = [...nuevosDatos[mesIndex], crearFilaVacia()];
+      guardarBorradorMensual(mesIndex, nuevosDatos[mesIndex]);
       return nuevosDatos;
     });
   };
@@ -199,6 +234,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       const nuevosDatos = [...prevDatos];
       const filtradas = nuevosDatos[mesIndex].filter((fila) => fila.id !== filaId);
       nuevosDatos[mesIndex] = filtradas.length > 0 ? filtradas : [crearFilaVacia()];
+      guardarBorradorMensual(mesIndex, nuevosDatos[mesIndex]);
       return nuevosDatos;
     });
   };
@@ -287,6 +323,10 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       }
 
       setMensaje(`Se guardaron ${data.totalGuardados} registro(s) de ${trimestreMeses[mesActivo]}.`);
+      
+      const key = `draft_ingresos_${directorId}_${trimestreId}_${mesActivo}`;
+      localStorage.removeItem(key);
+      setHayBorradores((prev) => ({ ...prev, [mesActivo]: false }));
     } catch (saveError) {
       console.error(saveError);
       setError(saveError.message || 'Error guardando los ingresos.');
@@ -418,6 +458,12 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
           >
             <CalendarDays size={18} />
             {mes.toUpperCase()}
+            {hayBorradores[index] && (
+              <span className="flex h-2.5 w-2.5 relative ml-1">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" title="Borrador local sin guardar"></span>
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -460,6 +506,24 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
         {loading && (
           <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
             Cargando ingresos del trimestre...
+          </div>
+        )}
+
+        {hayBorradores[mesActivo] && !trimestreCerrado && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2 text-amber-800">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+              <p className="text-sm font-bold">Tienes un borrador local con cambios sin guardar en este mes.</p>
+            </div>
+            <button
+              onClick={() => descartarBorrador(mesActivo)}
+              className="text-sm text-amber-700 hover:text-amber-900 hover:underline font-bold transition-colors"
+            >
+              Descartar cambios
+            </button>
           </div>
         )}
 

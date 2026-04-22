@@ -4,11 +4,11 @@ Este documento detalla las ideas y mejoras planificadas para evolucionar el **Si
 
 ---
 
-## 1. Exportación del Consolidado a PDF o Excel 📄
+## 1. Exportación del Consolidado a PDF o Excel 📄 *(Implementado ✅)*
 Actualmente, el director puede visualizar su consolidado (sumas, restas y saldos del banco) únicamente en pantalla. 
 **Objetivo:** Agregar un botón de "Descargar Reporte" que genere un documento PDF con formato oficial (incluyendo el logo de la UGEL, nombre del colegio, firmas, etc.) listo para ser impreso y firmado.
 
-## 2. Subida REAL de Archivos en `SubirPDFView.jsx` ☁️
+## 2. Subida REAL de Archivos en `SubirPDFView.jsx` ☁️ *(Implementado ✅)*
 La pestaña de "SUBIR PDF" cuenta con una interfaz atractiva pero actualmente solo simula el progreso de subida.
 **Objetivo:** Conectar este componente al backend usando una librería como `Multer` (en Node.js) para que los archivos PDF realmente se transfieran, se validen (peso, formato) y se guarden de forma segura en el servidor, manteniendo un histórico de sustentos.
 
@@ -16,7 +16,7 @@ La pestaña de "SUBIR PDF" cuenta con una interfaz atractiva pero actualmente so
 Sustituir los recuadros de mensajes estáticos de éxito o error que empujan el contenido de la pantalla.
 **Objetivo:** Implementar notificaciones flotantes (tipo *Toasts*) que aparezcan sutilmente en una esquina de la pantalla y desaparezcan automáticamente a los 3 segundos, mejorando significativamente la UX.
 
-## 4. Seguridad en el Backend (Autenticación JWT) 🔒
+## 4. Seguridad en el Backend (Autenticación JWT) 🔒 *(Implementado ✅)*
 Asegurarnos de que las rutas del backend estén protegidas contra accesos no autorizados.
 **Objetivo:** Implementar JSON Web Tokens (JWT) para que cuando el frontend solicite datos (ej. cargar ingresos/egresos), el servidor verifique la identidad del usuario a través del token de sesión. Esto previene que usuarios malintencionados fuercen peticiones escribiendo la URL de la API directamente.
 
@@ -25,5 +25,5 @@ Brindar la posibilidad al administrador / especialista de descargar un volcado t
 
 ---
 
-### 📝 ¿Cómo empezar a implementar estos cambios?
-Cada uno de estos requerimientos puede ser abordado de forma modular. Se sugiere iniciar por las funcionalidades orientadas a la experiencia del usuario final (Exportación a PDF y Subida de Archivos) y paralelamente endurecer la arquitectura del backend (JWT).
+### 📝 Estado Actual del Proyecto
+¡Excelente progreso! Prácticamente todas las funcionalidades clave iniciales se han completado con éxito de forma profesional. El siguiente paso natural en el desarrollo sería enfocarse en la **Descarga de Respaldos** y comenzar a darle vida a la **Vista del Especialista UGEL**, para que los administradores puedan revisar los archivos que los directores acaban de subir.

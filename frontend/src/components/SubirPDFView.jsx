@@ -3,7 +3,7 @@ import { Upload, FileText, Trash2, CheckCircle, AlertCircle, Eye, Loader2 } from
 import { buildApiUrl } from '../config/api';
 import Toast from './Toast';
 
-const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
+const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado }) => {
   const [archivos, setArchivos] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -122,16 +122,20 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
   // Manejadores para Arrastrar y Soltar (Drag & Drop)
   const handleDragOver = (e) => {
     e.preventDefault(); // Evita que el navegador abra el archivo
+    if (trimestreCerrado) return;
     setIsDragging(true);
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
+    if (trimestreCerrado) return;
     setIsDragging(false);
   };
 
   const handleDrop = (e) => {
     e.preventDefault(); // Evita que el navegador abra el archivo
+    if (trimestreCerrado) return;
+
     setIsDragging(false);
     
     const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
@@ -143,6 +147,8 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
   };
 
   const eliminarArchivo = async (id) => {
+    if (trimestreCerrado) return;
+    
     if (!window.confirm('¿Estás seguro de que deseas eliminar este documento permanentemente?')) return;
 
     try {
@@ -185,17 +191,25 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
           </div>
         </div>
 
+        {trimestreCerrado && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            Este trimestre está cerrado. Puede revisar y descargar los documentos, pero no subir ni eliminar archivos.
+          </div>
+        )}
+
         {/* Zona de Drop principal */}
         <label 
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`group flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-3xl transition-all ${
-            isUploading 
-              ? 'border-blue-400 bg-blue-50/50 cursor-wait' 
-              : isDragging
-                ? 'border-blue-500 bg-blue-100/50 scale-[1.02]' // Efecto visual al arrastrar encima
-                : 'border-slate-300 bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-400 cursor-pointer'
+            trimestreCerrado
+              ? 'border-slate-300 bg-slate-100/50 cursor-not-allowed opacity-75'
+              : isUploading 
+                ? 'border-blue-400 bg-blue-50/50 cursor-wait' 
+                : isDragging
+                  ? 'border-blue-500 bg-blue-100/50 scale-[1.02]' // Efecto visual al arrastrar encima
+                  : 'border-slate-300 bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-400 cursor-pointer'
           }`}
         >
           {isUploading ? (
@@ -206,14 +220,14 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <div className="p-4 bg-white shadow-sm border border-slate-200 text-blue-600 rounded-2xl mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                <Upload size={32} />
+              <div className={`p-4 bg-white shadow-sm border border-slate-200 rounded-2xl mb-4 transition-all duration-300 ${trimestreCerrado ? 'text-slate-400' : 'text-blue-600 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                {trimestreCerrado ? <CheckCircle size={32} /> : <Upload size={32} />}
               </div>
-              <p className="mb-2 text-sm text-slate-700 font-bold">Haz clic para subir o arrastra y suelta</p>
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">Solo formato PDF (Máx. 5MB por archivo)</p>
+              <p className="mb-2 text-sm text-slate-700 font-bold">{trimestreCerrado ? 'Subida deshabilitada' : 'Haz clic para subir o arrastra y suelta'}</p>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">{trimestreCerrado ? 'Trimestre Finalizado' : 'Solo formato PDF (Máx. 5MB por archivo)'}</p>
             </div>
           )}
-          <input type="file" className="hidden" accept=".pdf" multiple onChange={handleFileUpload} disabled={isUploading} />
+          <input type="file" className="hidden" accept=".pdf" multiple onChange={handleFileUpload} disabled={isUploading || trimestreCerrado} />
         </label>
 
         {/* Lista de Archivos Subidos */}
@@ -256,13 +270,15 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId }) => {
                     >
                       <Eye size={18} />
                     </a>
-                    <button 
-                      onClick={() => eliminarArchivo(archivo.id)}
-                      className="p-2.5 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      title="Eliminar archivo"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {!trimestreCerrado && (
+                      <button 
+                        onClick={() => eliminarArchivo(archivo.id)}
+                        className="p-2.5 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Eliminar archivo"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
