@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Key, Bell } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Bell } from 'lucide-react';
 import DirectorSidebar from './DirectorSidebar';
 import LogoutModal from './LogoutModal';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -69,6 +69,29 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
   const mensajeCierreEfectivo = autoCerrado && !trimestreCerrado 
     ? 'Este trimestre se ha cerrado automáticamente por haber superado la fecha límite.' 
     : mensajeCierre;
+
+  // Referencia estable a la función de logout
+  const onLogoutRef = useRef(onLogout);
+  useEffect(() => {
+    onLogoutRef.current = onLogout;
+  }, [onLogout]);
+
+  // Interceptor Global de Fetch: Detecta tokens expirados (Error 401)
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      // Si el backend nos rechaza la petición por token inválido o expirado
+      if (response.status === 401) {
+        alert('Tu sesión ha expirado por motivos de seguridad. Por favor, inicia sesión nuevamente.');
+        onLogoutRef.current(); // Expulsar al usuario inmediatamente
+      }
+      return response;
+    };
+    return () => {
+      window.fetch = originalFetch; // Restaurar el fetch original al salir
+    };
+  }, []);
 
   useEffect(() => {
     if (cambioObligatorioPendiente) {
@@ -165,6 +188,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogoutClick={() => setIsLogoutModalOpen(true)}
+        onChangePasswordClick={() => setIsChangePasswordOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto p-10">
@@ -251,15 +275,6 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
                 </div>
               )}
             </div>
-
-            <button
-              onClick={() => setIsChangePasswordOpen(true)}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-sm"
-              title="Cambiar contraseña"
-            >
-              <Key size={18} />
-              Cambiar Clave
-            </button>
           </div>
         </div>
 

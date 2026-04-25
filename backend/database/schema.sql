@@ -222,6 +222,62 @@ CREATE TABLE IF NOT EXISTS sustentos_pdf (
   COMMENT='Metadatos de los PDFs de sustento subidos por directores';
 
 -- ============================================
+-- TABLA 9: datos_institucionales
+-- Descripción: Almacena datos institucionales extras del comité
+-- ============================================
+CREATE TABLE IF NOT EXISTS datos_institucionales (
+  id                      INT AUTO_INCREMENT PRIMARY KEY,
+  director_id             INT NOT NULL COMMENT 'FK al director responsable',
+  codigo_modular          VARCHAR(20),
+  nombre_tesorero         VARCHAR(100),
+  dni_tesorero            VARCHAR(8),
+  celular_tesorero        VARCHAR(15),
+  numero_cuenta_corriente VARCHAR(50),
+  banco                   VARCHAR(50) DEFAULT 'Banco de la Nación',
+  fecha_actualizacion     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  CONSTRAINT fk_datos_inst_director 
+    FOREIGN KEY (director_id) 
+    REFERENCES directores(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE,
+    
+  INDEX idx_datos_inst_director_id (director_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Datos adicionales de la institución y comité';
+
+
+-- ============================================
+-- TABLA 10: saldos_cuenta_corriente
+-- Descripción: Saldos mensuales de la cuenta corriente por trimestre
+-- ============================================
+CREATE TABLE IF NOT EXISTS saldos_cuenta_corriente (
+  id                      INT AUTO_INCREMENT PRIMARY KEY,
+  director_id             INT NOT NULL COMMENT 'FK al director logueado',
+  anio                    INT NOT NULL COMMENT 'Año del reporte (ej. 2026)',
+  trimestre               TINYINT NOT NULL COMMENT 'Trimestre (1, 2, 3 o 4)',
+  saldo_inicial           DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Saldo inicial en CTA. CTE.',
+  saldo_mes1              DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Saldo al terminar el 1er mes',
+  saldo_mes2              DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Saldo al terminar el 2do mes',
+  saldo_mes3              DECIMAL(12,2) DEFAULT 0.00 COMMENT 'Saldo al terminar el 3er mes (Pasa a Consolidado)',
+  creado_en               TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  CONSTRAINT fk_saldos_cc_director 
+    FOREIGN KEY (director_id) 
+    REFERENCES directores(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE,
+    
+  CONSTRAINT chk_saldos_cc_trimestre
+    CHECK (trimestre BETWEEN 1 AND 4),
+    
+  UNIQUE KEY uk_saldos_cc_trimestre (director_id, anio, trimestre),
+  INDEX idx_saldos_cc_director (director_id, anio, trimestre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Saldos mensuales de la cuenta corriente por trimestre';
+
+-- ============================================
 -- DATOS DE EJEMPLO
 -- ============================================
 

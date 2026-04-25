@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { buildApiUrl } from '../config/api';
 
 const LoginForm = ({ onLoginSuccess }) => {
@@ -8,10 +8,12 @@ const LoginForm = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false); // Nuevo estado para animación de éxito
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSuccess(false);
     setLoading(true);
 
     try {
@@ -33,10 +35,11 @@ const LoginForm = ({ onLoginSuccess }) => {
         if (data.token) localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Pequeña pausa artificial para mostrar la animación fluida antes de cambiar de vista
+        // Mostrar estado de éxito en el botón antes de redirigir
+        setIsSuccess(true);
         setTimeout(() => {
           onLoginSuccess(data.user);
-        }, 1500); 
+        }, 1200); 
       } else {
         setError(data.message || 'Error en la autenticación');
         setLoading(false);
@@ -49,94 +52,148 @@ const LoginForm = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center relative overflow-hidden">
+    <div className="min-h-screen flex bg-white font-sans">
         
-        {/* Overlay de Carga con Medio Círculo Giratorio */}
-        {loading && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-            {/* Spinner (Medio círculo azul gracias a border-t y border-b transparentes) */}
-            <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 border-r-blue-600 rounded-full animate-spin mb-4 shadow-sm"></div>
-            <p className="text-blue-700 font-bold animate-pulse tracking-wide">
-              Ingresando al sistema...
-            </p>
-          </div>
-        )}
-
-        {/* Logo Real desde URL */}
-        <div className="mb-6 flex justify-center">
-          <img 
-            src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
-            alt="Logo UGEL" 
-            className="h-16 w-auto object-contain" 
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo+UGEL' }}
-          />
+      {/* Lado Izquierdo - Decorativo Institucional (Oculto en móviles) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 relative overflow-hidden items-center justify-center p-12">
+        {/* Círculos abstractos de fondo para darle modernidad */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-500 opacity-20 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-3/4 h-3/4 rounded-full bg-indigo-500 opacity-20 blur-3xl"></div>
         </div>
+        
+        <div className="relative z-10 text-white max-w-lg">
+          <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-md border border-white/20 inline-block mb-8 shadow-2xl">
+            <img 
+              src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
+              alt="Logo UGEL" 
+              className="h-16 w-auto object-contain drop-shadow-md" 
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo+UGEL' }}
+            />
+          </div>
+          <h1 className="text-4xl lg:text-5xl font-extrabold mb-5 leading-tight tracking-tight">
+            Gestión Financiera <br/>
+            <span className="text-blue-300">Educativa</span>
+          </h1>
+          <p className="text-blue-100/90 text-lg leading-relaxed font-medium">
+            Plataforma oficial para la declaración de sustentos, ingresos y egresos de las Instituciones Educativas de la jurisdicción.
+          </p>
+          
+          <div className="mt-16 flex items-center gap-4 text-xs text-blue-200/60 font-semibold uppercase tracking-widest">
+            <div className="h-px bg-blue-200/20 flex-1"></div>
+            UGEL Santa © 2026
+            <div className="h-px bg-blue-200/20 flex-1"></div>
+          </div>
+        </div>
+      </div>
 
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">
-          Sistema de Gestión Financiera Educativa
-        </h1>
-        <p className="text-gray-500 mb-8">Bienvenido. Por favor, inicie sesión.</p>
+      {/* Lado Derecho - Formulario Minimalista */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 md:p-16 bg-slate-50 lg:bg-white relative">
+        <div className="w-full max-w-md relative">
+          
+          {/* Mostrar logo en móvil (ya que el lado izquierdo se oculta) */}
+          <div className="lg:hidden mb-10 flex justify-center">
+            <img 
+              src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
+              alt="Logo UGEL" 
+              className="h-16 w-auto object-contain" 
+            />
+          </div>
+
+          <div className="mb-10 text-center lg:text-left">
+            <h2 className="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">¡Bienvenido!</h2>
+            <p className="text-slate-500 font-medium">Ingresa tus credenciales para continuar</p>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Campo Correo */}
-          <div className="text-left">
-            <label className="text-sm font-semibold text-gray-700 block mb-1">Correo Electrónico</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 text-gray-400 size={20}" />
-              <input
-                type="email"
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 pl-10 pr-4 outline-none focus:border-blue-500 transition-colors"
-                placeholder="Correo Electrónico"
-                value={correo}
-                onChange={(e) => setCorreo(e.target.value)}
-                required
-              />
+            <div className="space-y-2 text-left">
+              <label className="text-sm font-bold text-slate-700 block">Correo Electrónico</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <User size={20} />
+                </div>
+                <input
+                  type="email"
+                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
+                  placeholder="director@correo.com"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  required
+                  disabled={loading}
+                />
             </div>
           </div>
 
           {/* Campo Contraseña */}
-          <div className="text-left relative">
-            <label className="text-sm font-semibold text-gray-700 block mb-1">Contraseña</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400 size={20}" />
-              <input
-                type={showPassword ? "text" : "password"}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 pl-10 pr-12 outline-none focus:border-blue-500 transition-colors"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+            <div className="space-y-2 text-left relative">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-bold text-slate-700 block">Contraseña</label>
+                <button type="button" className="text-blue-600 hover:text-blue-700 text-sm font-bold hover:underline transition-colors" tabIndex="-1">
+                  ¿Olvidaste tu clave?
+                </button>
             </div>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <Lock size={20} />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-12 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
           </div>
 
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {/* Alerta de Error Elegante */}
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl animate-in fade-in slide-in-from-top-2">
+                <p className="text-red-700 text-sm font-bold">{error}</p>
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95"
-          >
-            {loading ? 'Verificando...' : 'Iniciar Sesión'}
-          </button>
-        </form>
-
-        <button type="button" className="text-blue-600 text-sm block mt-6 hover:underline w-full text-center">
-        ¿Olvidó su contraseña?
-        </button>
-
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-gray-400 text-[10px] uppercase tracking-wider">
-            Acceso exclusivo para personal autorizado.
-          </p>
+            {/* Botón Mágico Inteligente */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 relative overflow-hidden ${
+                isSuccess 
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/25 scale-[0.98]' 
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-blue-500/25 hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] disabled:from-slate-400 disabled:to-slate-500 disabled:transform-none disabled:shadow-none'
+              }`}
+            >
+              {isSuccess ? (
+                <>
+                  <CheckCircle size={22} className="animate-in zoom-in" />
+                  <span>¡Acceso Correcto!</span>
+                </>
+              ) : loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Verificando credenciales...</span>
+                </>
+              ) : (
+                <span>Iniciar Sesión</span>
+              )}
+            </button>
+          </form>
+          
+          <div className="mt-8 text-center">
+            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+              Acceso exclusivo para personal autorizado.
+            </p>
+          </div>
         </div>
       </div>
     </div>

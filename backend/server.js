@@ -6,6 +6,7 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const movimientosRoutes = require('./routes/movimientos');
 const sustentosRoutes = require('./routes/sustentos');
+const datosInstitucionalesRoutes = require('./routes/datosInstitucionales');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/movimientos', movimientosRoutes);
 app.use('/api/sustentos', sustentosRoutes);
+app.use('/api/datos-institucionales', datosInstitucionalesRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
