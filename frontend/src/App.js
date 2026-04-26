@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginForm from './components/LoginForm';
-import DirectorDashboard from './components/DirectorDashboard';
+import DirectorDashboard from './components/director/DirectorDashboard';
+import EspecialistaDashboard from './components/especialista/EspecialistaDashboard';
+import AdminDashboard from './components/admin/AdminDashboard';
 
 function App() {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Recuperar sesión persistente si el usuario da F5
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -14,32 +31,44 @@ function App() {
     setUser(null);
   };
 
-  const handleUserUpdate = (updatedUser) => {
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
-  };
-
-  if (!user) {
-    return <LoginForm onLoginSuccess={(userData) => setUser(userData)} />;
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold text-blue-600">Cargando Sistema...</div>;
   }
 
+  // 1. Si no hay usuario logueado, mostrar pantalla de Login
+  if (!user) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // 2. ENRUTADOR POR ROLES: Si es Especialista
+  if (user.rol === 'especialista') {
+    return (
+      <EspecialistaDashboard user={user} onLogout={handleLogout} />
+    );
+  }
+
+  // 3. ENRUTADOR POR ROLES: Si es Administrador del Sistema
+  if (user.rol === 'admin') {
+    return <AdminDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  // 4. ENRUTADOR POR ROLES: Si es Director
+  if (user.rol === 'director') {
+    return (
+      <DirectorDashboard 
+        user={user} 
+        onLogout={handleLogout} 
+        onUserUpdate={setUser} 
+      />
+    );
+  }
+
+  // 5. FALLBACK DE SEGURIDAD (Rol desconocido)
   return (
-    <div>
-      {user.rol === 'especialista' ? (
-        <div className="p-10 text-center">
-          <h1 className="text-3xl font-bold">Bienvenido Especialista</h1>
-          <p>Aqui veras las carpetas de todos los colegios.</p>
-          <button onClick={handleLogout} className="mt-4 text-blue-500 underline">
-            Cerrar Sesion
-          </button>
-        </div>
-      ) : (
-        <DirectorDashboard
-          user={user}
-          onLogout={handleLogout}
-          onUserUpdate={handleUserUpdate}
-        />
-      )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+      <h1 className="text-2xl font-bold text-red-600 mb-4">Acceso Denegado</h1>
+      <p className="text-slate-600 mb-4">Rol de usuario desconocido o corrupto.</p>
+      <button onClick={handleLogout} className="bg-slate-800 text-white px-4 py-2 rounded-lg">Volver al Login</button>
     </div>
   );
 }

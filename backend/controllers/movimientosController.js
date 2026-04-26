@@ -301,12 +301,18 @@ const cerrarTrimestre = async (req, res) => {
   try {
     await asegurarTablaCierres(pool);
 
-    await pool.execute(
-      `INSERT INTO cierres_trimestrales (director_id, anio, trimestre)
-       VALUES (?, ?, ?)
-       ON DUPLICATE KEY UPDATE cerrado_en = cerrado_en`,
-      [directorId, Number(anio), Number(trimestreId)]
-    );
+    // 1. Crear el candado del director en cierres_trimestrales
+    await pool.execute(`
+      INSERT IGNORE INTO cierres_trimestrales (director_id, anio, trimestre)
+      VALUES (?, ?, ?)
+    `, [directorId, anio, trimestreId]);
+
+    // 2. Notificar a la tabla del especialista que el informe ya fue enviado
+    await pool.execute(`
+      INSERT INTO estado_trimestres (director_id, trimestre, anio, estado, fecha_envio)
+      VALUES (?, ?, ?, 'Enviado', NOW())
+      ON DUPLICATE KEY UPDATE estado = 'Enviado', fecha_envio = NOW()
+    `, [directorId, trimestreId, anio]);
 
     const cierre = await obtenerEstadoCierre(pool, directorId, Number(anio), Number(trimestreId));
 

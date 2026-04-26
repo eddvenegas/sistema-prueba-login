@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Save, CalendarDays, X, Download, FileText } from 'lucide-react';
-import { buildApiUrl } from '../config/api';
-import Toast from './Toast';
+import { buildApiUrl } from '../../config/api';
+import Toast from '../Toast';
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import ExcelJS from 'exceljs';
 
-const API_URL = buildApiUrl('/api/movimientos/egresos');
+const API_URL = buildApiUrl('/api/movimientos/ingresos');
 
 const TIPOS_COMPROBANTE = [
   'Factura',
@@ -70,7 +70,7 @@ const leerRespuestaJson = async (response) => {
   }
 };
 
-const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado, schoolName }) => {
+const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado, schoolName }) => {
   const dateInputRefs = useRef({});
   const [mesActivo, setMesActivo] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -89,14 +89,14 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
   // Función para guardar el borrador del mes actual en LocalStorage
   const guardarBorradorMensual = (mesIndex, datosMes) => {
     if (!directorId || !trimestreId || trimestreCerrado) return;
-    const key = `draft_egresos_${directorId}_${trimestreId}_${mesIndex}`;
+    const key = `draft_ingresos_${directorId}_${trimestreId}_${mesIndex}`;
     localStorage.setItem(key, JSON.stringify(datosMes));
     setHayBorradores((prev) => ({ ...prev, [mesIndex]: true }));
   };
 
   const descartarBorrador = (mesIndex) => {
     if (!window.confirm('¿Descartar cambios no guardados y recuperar los datos originales del servidor?')) return;
-    const key = `draft_egresos_${directorId}_${trimestreId}_${mesIndex}`;
+    const key = `draft_ingresos_${directorId}_${trimestreId}_${mesIndex}`;
     localStorage.removeItem(key);
     setHayBorradores((prev) => ({ ...prev, [mesIndex]: false }));
     setReloadTrigger((prev) => prev + 1); // Dispara la recarga de datos del backend
@@ -122,7 +122,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
   };
 
   useEffect(() => {
-    const cargarEgresos = async () => {
+    const cargarIngresos = async () => {
       if (!directorId || !trimestreId) return;
 
       setLoading(true);
@@ -144,7 +144,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
         const data = await leerRespuestaJson(response);
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || 'No se pudieron cargar los egresos.');
+          throw new Error(data.message || 'No se pudieron cargar los ingresos.');
         }
 
         const agrupados = [[], [], []];
@@ -169,7 +169,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
 
         // Mezclar datos de la BD con los borradores locales si existen
         const baseDatosMeses = agrupados.map((mesRegistros, index) => {
-          const key = `draft_egresos_${directorId}_${trimestreId}_${index}`;
+          const key = `draft_ingresos_${directorId}_${trimestreId}_${index}`;
           const draftStr = localStorage.getItem(key);
           
           if (draftStr && !trimestreCerrado) {
@@ -187,13 +187,13 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
         setDatosMeses(baseDatosMeses);
       } catch (loadError) {
         console.error(loadError);
-        setError(loadError.message || 'Error cargando los egresos.');
+        setError(loadError.message || 'Error cargando los ingresos.');
       } finally {
         setLoading(false);
       }
     };
 
-    cargarEgresos();
+    cargarIngresos();
   }, [directorId, trimestreId, reloadTrigger, trimestreCerrado]);
 
   const handleInputChange = (mesIndex, filaId, campo, valor) => {
@@ -264,12 +264,12 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
 
   const guardarMesActual = async () => {
     if (trimestreCerrado) {
-      setError('Este trimestre esta cerrado y no admite cambios.');
+      setError('Este trimestre está cerrado y no admite cambios.');
       return;
     }
 
     if (!directorId) {
-      setError('No se encontro el director logueado.');
+      setError('No se encontró el director logueado.');
       return;
     }
 
@@ -324,12 +324,12 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
 
       setMensaje(`Se guardaron ${data.totalGuardados} registro(s) de ${trimestreMeses[mesActivo]}.`);
       
-      const key = `draft_egresos_${directorId}_${trimestreId}_${mesActivo}`;
+      const key = `draft_ingresos_${directorId}_${trimestreId}_${mesActivo}`;
       localStorage.removeItem(key);
       setHayBorradores((prev) => ({ ...prev, [mesActivo]: false }));
     } catch (saveError) {
       console.error(saveError);
-      setError(saveError.message || 'Error guardando los egresos.');
+      setError(saveError.message || 'Error guardando los ingresos.');
     } finally {
       setSaving(false);
     }
@@ -341,7 +341,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
     
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(`RELACIÓN DE EGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`, 14, 20);
+    doc.text(`RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`, 14, 20);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
@@ -364,18 +364,18 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
       head: [['N°', 'Fecha', 'Tipo Comprobante', 'N° Comprobante', 'Concepto', 'Importe']],
       body: tableData,
       theme: 'grid',
-      headStyles: { fillColor: [225, 29, 72] }, // Color rose-600
-      foot: [['', '', '', '', 'TOTAL EGRESOS', `S/. ${calcularTotal(mesActivo).toFixed(2)}`]],
+      headStyles: { fillColor: [5, 150, 105] }, // Color emerald-600
+      foot: [['', '', '', '', 'TOTAL INGRESOS', `S/. ${calcularTotal(mesActivo).toFixed(2)}`]],
       footStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } // slate-900
     });
 
     const nombreSeguro = (schoolName || 'IE').replace(/["<>|:*?\\/]/g, '').trim().replace(/\s+/g, '_');
-    doc.save(`Egresos_${trimestreMeses[mesActivo]}_${nombreSeguro}.pdf`);
+    doc.save(`Ingresos_${trimestreMeses[mesActivo]}_${nombreSeguro}.pdf`);
   };
 
   const handleDownloadExcel = async () => {
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('Egresos', {
+    const ws = wb.addWorksheet('Ingresos', {
       views: [{ state: 'frozen', xSplit: 0, ySplit: 5 }] // Congela cabecera
     });
 
@@ -399,7 +399,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
     ];
 
     ws.mergeCells('A1:F1');
-    ws.getCell('A1').value = `RELACIÓN DE EGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`;
+    ws.getCell('A1').value = `RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`;
     ws.getCell('A1').font = { size: 14, bold: true };
     ws.getCell('A1').alignment = { horizontal: 'center' };
     
@@ -407,12 +407,12 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
     ws.getCell('A2').value = 'Sistema de Gestión Financiera Educativa';
     ws.getCell('A2').alignment = { horizontal: 'center' };
 
-    ws.addRow([]); ws.addRow([]);
+    ws.addRow([]); ws.addRow([]); // Espacio debajo del título
 
     const headerRow = ws.addRow(['N°', 'Fecha', 'Tipo Comprobante', 'N° Comprobante', 'Concepto', 'Importe']);
     headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     headerRow.eachCell((cell) => {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE11D48' } }; // rose-600
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF059669' } }; // emerald-600
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
       cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
     });
@@ -423,7 +423,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
       row.eachCell(c => c.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } });
     });
 
-    const rowTotal = ws.addRow(['', '', '', '', 'TOTAL EGRESOS', Number(calcularTotal(mesActivo))]);
+    const rowTotal = ws.addRow(['', '', '', '', 'TOTAL INGRESOS', Number(calcularTotal(mesActivo))]);
     rowTotal.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     rowTotal.getCell(5).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
     rowTotal.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
@@ -435,12 +435,12 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     const nombreSeguro = (schoolName || 'IE').replace(/["<>|:*?\\/]/g, '').trim().replace(/\s+/g, '_');
-    link.download = `Egresos_${trimestreMeses[mesActivo]}_${nombreSeguro}.xlsx`;
+    link.download = `Ingresos_${trimestreMeses[mesActivo]}_${nombreSeguro}.xlsx`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
 
-  const inputClass = 'w-full p-2 outline-none bg-transparent text-slate-800 font-medium focus:bg-white focus:ring-2 focus:ring-rose-500/20 rounded transition-all';
+  const inputClass = 'w-full p-2 outline-none bg-transparent text-slate-800 font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500/20 rounded transition-all';
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -452,7 +452,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
             onClick={() => setMesActivo(index)}
             className={`flex-1 px-6 py-3 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
               mesActivo === index
-                ? 'bg-white text-rose-700 shadow-sm border border-slate-200'
+                ? 'bg-white text-emerald-700 shadow-sm border border-slate-200'
                 : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
             }`}
           >
@@ -470,9 +470,9 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
 
         <div className="flex justify-between items-center mb-6 rounded-3xl border border-slate-300 bg-slate-50/80 p-5 shadow-sm">
           <h2 className="text-lg font-bold text-slate-800 uppercase tracking-wide">
-            RELACIÓN DE EGRESOS - {trimestreMeses[mesActivo].toUpperCase()}
+            RELACIÓN DE INGRESOS - {trimestreMeses[mesActivo].toUpperCase()}
           </h2>
-
+          
           <div className="flex items-center gap-3">
             <button
               onClick={handleDownloadPDF}
@@ -490,7 +490,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
             <button
               onClick={() => agregarFila(mesActivo)}
               disabled={trimestreCerrado}
-              className="flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-rose-700 transition-all shadow-md font-bold disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-700 transition-all shadow-md font-bold disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               <Plus size={18} /> Agregar Fila
             </button>
@@ -499,13 +499,13 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
 
         {trimestreCerrado && (
           <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            Este trimestre esta cerrado. Puede revisar la informacion, pero no editarla.
+            Este trimestre está cerrado. Puede revisar la información, pero no editarla.
           </div>
         )}
 
         {loading && (
           <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-            Cargando egresos del trimestre...
+            Cargando ingresos del trimestre...
           </div>
         )}
 
@@ -533,14 +533,14 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
         <div className="overflow-x-auto rounded-[26px] border border-slate-300 shadow-sm">
           <table className="w-full border-collapse bg-white text-sm">
             <thead>
-              <tr className="bg-gradient-to-r from-rose-600 to-red-600 text-white">
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-12 text-center text-xs">N°</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-28 text-center text-xs">Fecha</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-40 text-center text-xs">Tipo Comprobante</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-36 text-center text-xs">N° Comprobante</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider text-left text-xs">Concepto</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-36 text-right text-xs">Importe (S/.)</th>
-                <th className="border border-rose-700/50 px-4 py-3 font-bold uppercase tracking-wider w-16 text-center text-xs">Acción</th>
+              <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-12 text-center text-xs">N°</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-28 text-center text-xs">Fecha</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-40 text-center text-xs">Tipo Comprobante</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-36 text-center text-xs">N° Comprobante</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider text-left text-xs">Concepto</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-36 text-right text-xs">Importe (S/.)</th>
+                <th className="border border-emerald-700/50 px-4 py-3 font-bold uppercase tracking-wider w-16 text-center text-xs">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -568,8 +568,8 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
                         }}
                         value={fila.fecha}
                         onChange={(e) => handleInputChange(mesActivo, fila.id, 'fecha', e.target.value)}
-                        className="sr-only"
                         disabled={trimestreCerrado}
+                        className="sr-only"
                         tabIndex={-1}
                         aria-hidden="true"
                       />
@@ -646,7 +646,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
                 <td colSpan="5" className="border border-slate-700 px-4 py-3 text-right uppercase tracking-wider text-xs">
                   Total {trimestreMeses[mesActivo]}
                 </td>
-                <td className="border border-slate-700 px-4 py-3 text-right font-mono text-base text-rose-400">
+                <td className="border border-slate-700 px-4 py-3 text-right font-mono text-base text-emerald-400">
                   {new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2 }).format(calcularTotal(mesActivo))}
                 </td>
                 <td className="border border-slate-700 px-4 py-3 bg-slate-900"></td>
@@ -660,7 +660,7 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
             type="button"
             onClick={guardarMesActual}
             disabled={saving || loading || trimestreCerrado}
-            className="flex items-center gap-2 bg-rose-600 text-white px-8 py-3.5 rounded-2xl hover:bg-rose-700 transition-all font-bold shadow-lg disabled:bg-slate-400 uppercase tracking-wide text-sm"
+            className="flex items-center gap-2 bg-emerald-600 text-white px-8 py-3.5 rounded-2xl hover:bg-emerald-700 transition-all font-bold shadow-lg disabled:bg-slate-400 uppercase tracking-wide text-sm"
           >
             <Save size={20} /> {saving ? 'Guardando...' : 'Guardar Mes Actual'}
           </button>
@@ -670,4 +670,4 @@ const EgresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado
   );
 };
 
-export default EgresosView;
+export default IngresosView;

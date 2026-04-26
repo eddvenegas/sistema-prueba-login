@@ -1,0 +1,349 @@
+import React, { useState, useEffect } from 'react';
+import { Users, Search, Plus, Edit, Trash2, Shield, User, ShieldCheck, RefreshCw, X } from 'lucide-react';
+import { buildApiUrl } from '../../config/api';
+
+const UsersView = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('todos');
+  
+  // Estados para el Modal
+  const [showModal, setShowModal] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [formData, setFormData] = useState({ nombre: '', email: '', password: '', rol: 'especialista' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalError, setModalError] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    // Obtener el ID del usuario activo desde el token JWT
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.id);
+      } catch (e) {}
+    }
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(buildApiUrl('/api/admin/usuarios'), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setUsers(data.data);
+      } else {
+        setError(data.message || 'Error al cargar los usuarios.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Error de conexión al servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = 
+      (u.nombre && u.nombre.toLowerCase().includes(searchTerm.toLowerCase())) || 
+      (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (u.colegio && u.colegio.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesRole = roleFilter === 'todos' || u.rol === roleFilter;
+    
+    return matchesSearch && matchesRole;
+  });
+
+  // Manejar el envío del formulario (Crear o Editar)
+  const handleSubmitUser = async (e) => {
+    e.preventDefault();
+    setModalError(null);
+    setIsSubmitting(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const method = editingUserId ? 'PUT' : 'POST';
+      const endpoint = editingUserId ? `/api/admin/usuarios/${editingUserId}` : '/api/admin/usuarios';
+      
+      const response = await fetch(buildApiUrl(endpoint), {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      // Verificación de seguridad para evitar que crashee si el backend devuelve HTML (ej. un 404)
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("La ruta no existe en el servidor. Por favor, reinicia tu consola del backend.");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowModal(false);
+        setEditingUserId(null);
+        setFormData({ nombre: '', email: '', password: '', rol: 'especialista' }); // resetear form
+        fetchUsers(); // Recargar la tabla
+      } else {
+        setModalError(data.message || 'Error al guardar el usuario.');
+      }
+    } catch (err) {
+      console.error(err);
+      if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        setModalError('Error de red: El servidor backend parece estar apagado.');
+      } else {
+        setModalError(err.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Manejar la eliminación o suspensión del usuario
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar o suspender a este usuario?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(buildApiUrl(`/api/admin/usuarios/${id}`), {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        fetchUsers();
+      } else {
+        alert(data.message || 'Error al procesar la solicitud.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error de red al intentar comunicarse con el servidor.');
+    }
+  };
+
+  const getRoleBadge = (rol) => {
+    switch (rol) {
+      case 'admin':
+        return <span className="flex items-center gap-1.5 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200"><ShieldCheck size={14}/> Admin</span>;
+      case 'especialista':
+        return <span className="flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200"><Shield size={14}/> Especialista</span>;
+      case 'director':
+        return <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200"><User size={14}/> Director</span>;
+      default:
+        return <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold border border-slate-200">{rol}</span>;
+    }
+  };
+
+  if (loading) return <div className="flex-1 flex justify-center items-center p-8 text-slate-500 font-medium">Cargando usuarios...</div>;
+  if (error) return <div className="flex-1 flex justify-center items-center p-8 text-rose-500 font-bold">{error}</div>;
+
+  return (
+    <>
+      <header className="bg-white shadow-sm px-8 py-5 flex items-center justify-between z-10 border-b border-slate-200">
+        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+          <Users className="text-blue-600" size={28} />
+          Gestión de Usuarios
+        </h1>
+        
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={fetchUsers} 
+            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm"
+          >
+            <RefreshCw size={18} />
+          </button>
+          <button 
+            onClick={() => {
+              setEditingUserId(null);
+              setFormData({ nombre: '', email: '', password: '', rol: 'especialista' });
+              setShowModal(true);
+            }}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm"
+          >
+            <Plus size={18} />
+            Nuevo Usuario
+          </button>
+        </div>
+      </header>
+      
+      <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
+        <div className="max-w-6xl mx-auto space-y-6">
+          
+          {/* Barra de herramientas */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar por nombre, correo o colegio..." 
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+              <select 
+                className="w-full md:w-auto bg-slate-50 border border-slate-200 text-slate-700 py-2.5 px-4 rounded-xl text-sm font-medium outline-none focus:border-blue-500"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="todos">Todos los Roles</option>
+                <option value="admin">Administradores</option>
+                <option value="especialista">Especialistas</option>
+                <option value="director">Directores</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tabla de Usuarios */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                    <th className="p-4 font-bold">Usuario</th>
+                    <th className="p-4 font-bold">Rol</th>
+                    <th className="p-4 font-bold">Institución Asignada</th>
+                    <th className="p-4 font-bold text-center">Estado</th>
+                    <th className="p-4 font-bold text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-slate-500 font-medium">No se encontraron usuarios que coincidan con los filtros.</td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-4">
+                          <p className="font-bold text-slate-800">{u.nombre}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{u.email}</p>
+                        </td>
+                        <td className="p-4">
+                          {getRoleBadge(u.rol)}
+                        </td>
+                        <td className="p-4 text-sm text-slate-600 font-medium">
+                          {u.colegio}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border ${u.estado === 'activo' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                            {u.estado === 'activo' ? 'Activo' : 'Suspendido'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex justify-center gap-2">
+                            <button 
+                              onClick={() => {
+                                setEditingUserId(u.id);
+                                setFormData({ nombre: u.nombre, email: u.email, password: '', rol: u.rol });
+                                setShowModal(true);
+                              }}
+                              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar Usuario">
+                              <Edit size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteUser(u.id)}
+                              disabled={currentUserId === u.id}
+                              className={`p-2 rounded-lg transition-colors ${currentUserId === u.id ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'}`} 
+                              title={currentUserId === u.id ? "No puedes eliminar tu propia cuenta" : "Suspender/Eliminar"}
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal para Crear Usuario */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg font-bold text-slate-800">
+                {editingUserId ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+              </h3>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitUser} className="p-6 space-y-4">
+              {modalError && (
+                <div className="p-3 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-sm font-medium">
+                  {modalError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Nombre Completo</label>
+                <input type="text" required
+                  value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition-all"
+                  placeholder="Ej. Ana María López" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Correo Electrónico</label>
+                <input type="email" required
+                  value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition-all"
+                  placeholder="correo@ugel.edu.pe" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                  {editingUserId ? 'Nueva Contraseña (Opcional)' : 'Contraseña Temporal'}
+                </label>
+                <input type="password" required={!editingUserId} minLength="6"
+                  value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition-all"
+                  placeholder={editingUserId ? "Dejar en blanco para no cambiar" : "Mínimo 6 caracteres"} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Rol de Sistema</label>
+                <select required
+                  value={formData.rol} onChange={(e) => setFormData({...formData, rol: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm transition-all font-medium text-slate-700">
+                  <option value="especialista">Especialista UGEL</option>
+                  <option value="admin">Administrador (TI)</option>
+                  <option value="director">Director de I.E.</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2.5 text-slate-600 bg-slate-100 hover:bg-slate-200 font-bold rounded-xl transition-colors">Cancelar</button>
+                <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2.5 text-white bg-blue-600 hover:bg-blue-700 font-bold rounded-xl transition-colors disabled:opacity-50">
+                  {isSubmitting ? 'Guardando...' : (editingUserId ? 'Actualizar Usuario' : 'Crear Usuario')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default UsersView;

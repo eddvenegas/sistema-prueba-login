@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import DirectorSidebar from './DirectorSidebar';
-import LogoutModal from './LogoutModal';
-import ChangePasswordModal from './ChangePasswordModal';
+import LogoutModal from '../LogoutModal';
+import ChangePasswordModal from '../ChangePasswordModal';
 import CerrarTrimestreModal from './CerrarTrimestreModal';
 import ConsolidadoView from './ConsolidadoView';
 import InformacionGeneralView from './InformacionGeneralView';
 import IngresosView from './IngresosView';
 import EgresosView from './EgresosView';
 import SubirPDFView from './SubirPDFView';
-import { buildApiUrl } from '../config/api';
+import { buildApiUrl } from '../../config/api';
 
 const CIERRES_API_URL = buildApiUrl('/api/movimientos/cierres');
 
@@ -46,6 +46,8 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
   const [mensajeCierre, setMensajeCierre] = useState('');
   const [errorCierre, setErrorCierre] = useState('');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const dropdownRef = useRef(null);
 
   const cambioObligatorioPendiente = Boolean(user?.debeCambiarPassword);
 
@@ -69,6 +71,54 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
   const mensajeCierreEfectivo = autoCerrado && !trimestreCerrado 
     ? 'Este trimestre se ha cerrado automáticamente por haber superado la fecha límite.' 
     : mensajeCierre;
+
+  // 1. Obtener notificaciones de la BD
+  useEffect(() => {
+    const fetchNotificaciones = async () => {
+      try {
+        const id = user.director?.id || user.id;
+        const response = await fetch(`http://localhost:5000/api/notificaciones/${id}`);
+        const data = await response.json();
+        if (data.success) {
+          setNotificaciones(data.notificaciones);
+        }
+      } catch (error) {
+        console.error("Error al obtener notificaciones:", error);
+      }
+    };
+    if (user) fetchNotificaciones();
+  }, [user]);
+
+  const unreadCount = notificaciones.filter(n => !n.leida).length;
+
+  // 2. Abrir/Cerrar y marcar como leídas
+  const toggleNotificaciones = async () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+    
+    // Si estamos abriendo el panel y hay no leídas, avisamos a la BD
+    if (!isNotificationsOpen && unreadCount > 0) {
+      try {
+        const id = user.director?.id || user.id;
+        await fetch(`http://localhost:5000/api/notificaciones/${id}/leidas`, { method: 'PUT' });
+        
+        // Actualizamos estado local
+        setNotificaciones(notificaciones.map(n => ({ ...n, leida: true })));
+      } catch (error) {
+        console.error("Error al marcar como leídas:", error);
+      }
+    }
+  };
+
+  // 3. Cerrar panel al hacer clic fuera de él
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Referencia estable a la función de logout
   const onLogoutRef = useRef(onLogout);
@@ -217,16 +267,16 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
               <option value="4">4to Trimestre</option>
             </select>
             
-            {/* Dropdown de Notificaciones y Alertas de Plazos */}
-            <div className="relative z-50">
+            {/* Dropdown de Notificaciones (Alertas + BD) */}
+            <div className="relative z-50" ref={dropdownRef}>
               <button
                 type="button"
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                onClick={toggleNotificaciones}
                 className="relative p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 rounded-full transition-colors focus:outline-none"
                 title="Notificaciones"
               >
                 <Bell size={22} />
-                {diasRestantes > 0 && diasRestantes <= 15 && !trimestreCerrado && (
+                {(unreadCount > 0 || (diasRestantes > 0 && diasRestantes <= 15 && !trimestreCerrado)) && (
                   <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
@@ -237,9 +287,15 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
               {isNotificationsOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-slate-200 overflow-hidden">
                   <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-slate-800">Alertas del Sistema</h3>
+                    <h3 className="text-sm font-bold text-slate-800">Centro de Alertas</h3>
+                    {unreadCount > 0 && (
+                      <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                        {unreadCount} nuevas
+                      </span>
+                    )}
                   </div>
-                  <div className="p-4">
+                  <div className="max-h-96 overflow-y-auto p-4 space-y-4">
+                    {/* --- ALERTA DEL SISTEMA (FECHAS LÍMITE) --- */}
                     {autoCerrado ? (
                       <div className="flex gap-3">
                         <div className="mt-0.5 text-red-500"><Bell size={18} /></div>
@@ -271,6 +327,32 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
                         </div>
                       </div>
                     )}
+
+                    {/* --- NOTIFICACIONES DE LA BD (ESPECIALISTA) --- */}
+                    {notificaciones.length > 0 && <div className="border-t border-slate-100 my-2"></div>}
+                    
+                    {notificaciones.map((notif) => (
+                      <div key={notif.id} className={`flex gap-3 p-3 rounded-xl transition-colors ${!notif.leida ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}>
+                        <div className="mt-0.5">
+                          <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                            notif.tipo === 'error' ? 'bg-rose-500' : 
+                            notif.tipo === 'exito' ? 'bg-emerald-500' : 'bg-blue-500'
+                          }`}></div>
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold ${
+                            notif.tipo === 'error' ? 'text-rose-700' : 
+                            notif.tipo === 'exito' ? 'text-emerald-700' : 'text-slate-800'
+                          }`}>
+                            {notif.titulo}
+                          </p>
+                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">{notif.mensaje}</p>
+                          <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                            {new Date(notif.fecha_creacion).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

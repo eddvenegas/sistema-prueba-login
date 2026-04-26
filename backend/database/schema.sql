@@ -116,6 +116,33 @@ CREATE TABLE IF NOT EXISTS login_logs (
   COMMENT='Auditoría de logins - histórico de accesos';
 
 -- ============================================
+-- TABLA 4.1: auditoria_logs
+-- Descripción: Auditoría de acciones de usuarios dentro del sistema
+-- Propósito: Registrar quién, qué, cuándo y desde dónde hizo un cambio
+-- ============================================
+CREATE TABLE IF NOT EXISTS auditoria_logs (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id      INT NOT NULL COMMENT 'Usuario que realizó la acción',
+  modulo          VARCHAR(50) NOT NULL COMMENT 'Ej: Sustentos, Ingresos, Perfil, Admin',
+  accion          ENUM('CREAR', 'ACTUALIZAR', 'ELIMINAR', 'CAMBIAR_PASSWORD', 'DESCARGAR') NOT NULL,
+  descripcion     VARCHAR(255) NOT NULL COMMENT 'Ej: Subió el archivo Reporte_1.pdf',
+  fecha_hora      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ip_address      VARCHAR(45) COMMENT 'Dirección IP desde donde se hizo',
+  
+  CONSTRAINT fk_auditoria_logs_usuario
+    FOREIGN KEY (usuario_id) 
+    REFERENCES usuarios(id) 
+    ON DELETE CASCADE,
+    
+  INDEX idx_auditoria_usuario (usuario_id),
+  INDEX idx_auditoria_fecha (fecha_hora),
+  INDEX idx_auditoria_modulo (modulo),
+  INDEX idx_auditoria_accion (accion)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Registro de auditoría de actividades de usuarios';
+
+
+-- ============================================
 -- TABLA 5: ingresos
 -- DescripciÃ³n: Movimientos de ingresos por director
 -- DiseÃ±o: Tabla normalizada, sin columnas por mes ni totales almacenados
@@ -278,6 +305,56 @@ CREATE TABLE IF NOT EXISTS saldos_cuenta_corriente (
   COMMENT='Saldos mensuales de la cuenta corriente por trimestre';
 
 -- ============================================
+-- ============================================
+-- 1. TABLA PRINCIPAL DE ESTADOS Y AUDITORÍA
+-- Controla la fase en la que se encuentra la declaración financiera
+CREATE TABLE estado_trimestres (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    director_id INT NOT NULL,
+    trimestre INT NOT NULL CHECK (trimestre IN (1, 2, 3, 4)),
+    anio INT NOT NULL,
+    
+    -- Los 4 estados posibles de nuestro flujo:
+    estado ENUM('Borrador', 'Enviado', 'Observado', 'Aprobado') DEFAULT 'Borrador',
+    
+    -- Aquí se guarda el texto de rechazo que escribe el especialista en el Modal:
+    comentario_observacion TEXT NULL,
+    
+    -- Trazabilidad de tiempos:
+    fecha_envio DATETIME NULL,       -- Cuando el director aprieta "Cerrar Trimestre"
+    fecha_auditoria DATETIME NULL,   -- Cuando el especialista aprueba o rechaza
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Restricción vital: Un director solo puede tener 1 estado por trimestre y año
+    UNIQUE KEY unique_trimestre_director (director_id, trimestre, anio),
+    
+    -- Llave foránea (Asumiendo que tu tabla de directores se llama 'directores')
+    FOREIGN KEY (director_id) REFERENCES directores(id) ON DELETE CASCADE
+);
+
+
+-- 2. TABLA DE NOTIFICACIONES (LA "CAMPANITA" DEL DIRECTOR)
+-- Permite que el especialista le envíe alertas al director al aprobar/rechazar
+CREATE TABLE notificaciones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    director_id INT NOT NULL,
+    
+    titulo VARCHAR(150) NOT NULL,
+    mensaje TEXT NOT NULL,
+    
+    -- Para darle color al aviso (ej. exito = verde, alerta = amarillo, error = rojo)
+    tipo ENUM('info', 'exito', 'alerta', 'error') DEFAULT 'info',
+    
+    -- Para saber si el director ya hizo clic en la campana para leerla
+    leida BOOLEAN DEFAULT FALSE,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (director_id) REFERENCES directores(id) ON DELETE CASCADE
+);
+-- ============================================
+-- ============================================
+
+-- ============================================
 -- DATOS DE EJEMPLO
 -- ============================================
 
@@ -309,4 +386,5 @@ INSERT INTO usuarios (email, password_hash, debe_cambiar_password, rol, director
 ('yedadero@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 4, 'activo'),
 ('carolinarospigliosi@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 5, 'activo'),
 ('daryexpaxmo@hotmail.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', TRUE, 'director', 6, 'activo'),
-('especialista@ugel.edu.pe', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', FALSE, 'especialista', NULL, 'activo');
+('especialista@ugel.edu.pe', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', FALSE, 'especialista', NULL, 'activo'),
+('admin1007@admin.com', '$2a$10$slYQmyNdGzin7olVntoFreyUM4czQcUms/LewY5YsuqCqtiqWXXi', FALSE, 'admin', NULL, 'activo');

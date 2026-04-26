@@ -29,9 +29,13 @@ const login = async (req, res) => {
   if (!correo || !password) {
     return res.status(400).json({
       success: false,
-      message: 'Correo y contrasena son requeridos.'
+      message: 'Correo y contraseña son requeridos.'
     });
   }
+
+  // Capturar datos del cliente para la auditoría de inicio de sesión
+  const ipAddress = req.ip || req.connection?.remoteAddress || null;
+  const userAgent = req.headers['user-agent'] || 'Desconocido';
 
   let connection;
 
@@ -46,6 +50,7 @@ const login = async (req, res) => {
           email,
           password_hash,
           rol,
+          nombre,
           director_id,
           ${tieneColumnaDebeCambiarPassword ? 'COALESCE(debe_cambiar_password, FALSE)' : 'FALSE'} AS debe_cambiar_password
         FROM usuarios
@@ -55,6 +60,10 @@ const login = async (req, res) => {
     );
 
     if (usuarios.length === 0) {
+      await connection.execute(
+        `INSERT INTO login_logs (email, exitoso, razon_fallo, ip_address, user_agent) VALUES (?, FALSE, 'Usuario no encontrado', ?, ?)`,
+        [correo.trim(), ipAddress, userAgent]
+      );
       return res.status(401).json({
         success: false,
         message: 'Correo o contrasena incorrectos.'
@@ -65,9 +74,13 @@ const login = async (req, res) => {
     const passwordValida = await bcrypt.compare(password, usuario.password_hash);
 
     if (!passwordValida) {
+      await connection.execute(
+        `INSERT INTO login_logs (usuario_id, email, exitoso, razon_fallo, ip_address, user_agent) VALUES (?, ?, FALSE, 'Contraseña incorrecta', ?, ?)`,
+        [usuario.id, correo.trim(), ipAddress, userAgent]
+      );
       return res.status(401).json({
         success: false,
-        message: 'Correo o contrasena incorrectos.'
+        message: 'Correo o contraseña incorrectos.'
       });
     }
 
@@ -98,6 +111,18 @@ const login = async (req, res) => {
       }
     }
 
+    // Registrar log exitoso
+    await connection.execute(
+      `INSERT INTO login_logs (usuario_id, email, exitoso, ip_address, user_agent) VALUES (?, ?, TRUE, ?, ?)`,
+      [usuario.id, correo.trim(), ipAddress, userAgent]
+    );
+
+    // Actualizar último login
+    await connection.execute(
+      `UPDATE usuarios SET ultimo_login = CURRENT_TIMESTAMP WHERE id = ?`,
+      [usuario.id]
+    );
+
     connection.release();
     connection = null;
 
@@ -109,11 +134,12 @@ const login = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Inicio de sesion exitoso.',
+      message: 'Inicio de sesión exitoso.',
       token,
       user: {
         id: usuario.id,
         email: usuario.email,
+        nombre: usuario.nombre || (usuario.rol === 'admin' ? 'Administrador' : 'Usuario'),
         rol: usuario.rol,
         debeCambiarPassword: Boolean(usuario.debe_cambiar_password),
         director: directorData
@@ -158,14 +184,14 @@ const changePassword = async (req, res) => {
   if (!userId || !newPassword) {
     return res.status(400).json({
       success: false,
-      message: 'No se pudo identificar al usuario o falta la nueva contrasena.'
+      message: 'No se pudo identificar al usuario o falta la nueva contraseña.'
     });
   }
 
   if (newPassword.length < 6) {
     return res.status(400).json({
       success: false,
-      message: 'La nueva contrasena debe tener al menos 6 caracteres.'
+      message: 'La nueva contraseña debe tener al menos 6 caracteres.'
     });
   }
 
@@ -208,7 +234,7 @@ const changePassword = async (req, res) => {
       if (!currentPassword) {
         return res.status(400).json({
           success: false,
-          message: 'La contrasena actual es requerida.'
+          message: 'La contraseña actual es requerida.'
         });
       }
 
@@ -217,7 +243,7 @@ const changePassword = async (req, res) => {
       if (!passwordValida) {
         return res.status(401).json({
           success: false,
-          message: 'Contrasena actual incorrecta.'
+          message: 'Contraseña actual incorrecta.'
         });
       }
     }
@@ -227,7 +253,7 @@ const changePassword = async (req, res) => {
     if (mismaPassword) {
       return res.status(400).json({
         success: false,
-        message: 'La nueva contrasena no puede ser igual a la actual.'
+        message: 'La nueva contraseña no puede ser igual a la actual.'
       });
     }
 
@@ -247,17 +273,17 @@ const changePassword = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(500).json({
         success: false,
-        message: 'Error al actualizar la contrasena.'
+        message: 'Error al actualizar la contraseña.'
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Contrasena actualizada correctamente.',
+      message: 'Contraseña actualizada correctamente.',
       debeCambiarPassword: false
     });
   } catch (error) {
-    console.error('Error cambiando contrasena:', error);
+    console.error('Error cambiando contraseña:', error);
     if (connection) {
       connection.release();
     }

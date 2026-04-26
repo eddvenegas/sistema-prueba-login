@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Lock, Eye, EyeOff } from 'lucide-react';
+import { X, Lock, Eye, EyeOff, Key, ShieldCheck } from 'lucide-react';
 import { buildApiUrl } from '../config/api';
 
 const ChangePasswordModal = ({
@@ -41,17 +41,17 @@ const ChangePasswordModal = ({
     }
 
     if (newPassword.length < 6) {
-      setError('La nueva contrasena debe tener al menos 6 caracteres.');
+      setError('La nueva contraseña debe tener al menos 6 caracteres.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Las contrasenas no coinciden.');
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
     if (!esCambioObligatorio && currentPassword === newPassword) {
-      setError('La nueva contrasena no puede ser igual a la actual.');
+      setError('La nueva contraseña no puede ser igual a la actual.');
       return;
     }
 
@@ -73,7 +73,7 @@ const ChangePasswordModal = ({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        setError(data.message || 'Error al cambiar la contrasena.');
+        setError(data.message || 'Error al cambiar la contraseña.');
         return;
       }
 
@@ -94,8 +94,8 @@ const ChangePasswordModal = ({
 
       setSuccess(
         esCambioObligatorio
-          ? 'Contrasena actualizada. Ya puedes continuar al sistema.'
-          : 'Contrasena actualizada correctamente.'
+          ? 'Contraseña actualizada. Ya puedes continuar al sistema.'
+          : 'Contraseña actualizada correctamente.'
       );
 
       setTimeout(() => {
@@ -113,123 +113,143 @@ const ChangePasswordModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex justify-between items-center bg-blue-600 text-white p-6 rounded-t-xl">
-          <div className="flex items-center gap-2">
-            <Lock size={24} />
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        
+        {/* Cabecera Moderna */}
+        <div className="p-6 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center relative overflow-hidden">
+          {/* Decoración de fondo */}
+          <div className="absolute -right-4 -top-4 text-blue-500/10">
+            <ShieldCheck size={100} />
+          </div>
+          
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-inner border border-blue-200">
+              <Lock size={24} />
+            </div>
             <div>
-              <h2 className="text-xl font-bold">
-                {esCambioObligatorio ? 'Cambio Obligatorio' : 'Cambiar Contrasena'}
+              <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+                {esCambioObligatorio ? 'Cambio Obligatorio' : 'Cambiar Contraseña'}
               </h2>
-              <p className="text-sm text-blue-100">
+              <p className="text-sm text-slate-500 font-medium mt-0.5">
                 {esCambioObligatorio
-                  ? 'Debes actualizar tu clave temporal para ingresar.'
-                  : 'Actualiza tu contrasena cuando lo necesites.'}
+                  ? 'Actualiza tu clave para ingresar.'
+                  : 'Protege el acceso a tu cuenta.'}
               </p>
             </div>
           </div>
           {!esCambioObligatorio && (
             <button
               onClick={onClose}
-              className="hover:bg-blue-700 p-1 rounded-lg transition-colors"
+            className="relative z-10 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-xl transition-colors"
             >
-              <X size={24} />
+            <X size={20} />
             </button>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Cuerpo del Formulario */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-rose-50 border-l-4 border-rose-500 text-rose-700 px-4 py-3 rounded-r-xl text-sm font-medium animate-in slide-in-from-top-2">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-3 rounded-r-xl text-sm font-medium animate-in slide-in-from-top-2">
               {success}
             </div>
           )}
 
           {!esCambioObligatorio && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Contrasena Actual
+            <div className="space-y-1.5">
+              <label className="block text-sm font-bold text-slate-700">
+                Contraseña Actual
               </label>
-              <div className="relative">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                  <Key size={18} />
+                </div>
                 <input
                   type={showCurrentPassword ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
-                  placeholder="Ingresa tu contrasena actual"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl py-3 pl-10 pr-12 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  placeholder="••••••••"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Nueva Contrasena
+          <div className="space-y-1.5">
+            <label className="block text-sm font-bold text-slate-700">
+              Nueva Contraseña
             </label>
-            <div className="relative">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <Key size={18} />
+              </div>
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
-                placeholder="Minimo 6 caracteres"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl py-3 pl-10 pr-12 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                placeholder="Mínimo 6 caracteres"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Confirmar Nueva Contrasena
+          <div className="space-y-1.5">
+            <label className="block text-sm font-bold text-slate-700">
+              Confirmar Nueva Contraseña
             </label>
-            <div className="relative">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <Key size={18} />
+              </div>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
-                placeholder="Repite la nueva contrasena"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl py-3 pl-10 pr-12 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                placeholder="Repite la nueva contraseña"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {/* Botones */}
+          <div className="flex gap-3 pt-4 border-t border-slate-100 mt-2">
             {!esCambioObligatorio && (
               <button
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 hover:text-slate-800 transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>
@@ -237,9 +257,19 @@ const ChangePasswordModal = ({
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-[2] px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-md shadow-blue-500/25 hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none flex items-center justify-center gap-2"
             >
-              {loading ? 'Actualizando...' : 'Actualizar'}
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Actualizando...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck size={18} />
+                  <span>Actualizar Clave</span>
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileText, Trash2, CheckCircle, AlertCircle, Eye, Loader2 } from 'lucide-react';
-import { buildApiUrl } from '../config/api';
-import Toast from './Toast';
+import { buildApiUrl } from '../../config/api';
+import { registrarAccion } from '../../utils/auditHelper';
+import Toast from '../Toast';
 
 const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado }) => {
   const [archivos, setArchivos] = useState([]);
@@ -267,6 +268,9 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
                       rel="noopener noreferrer"
                       className="p-2.5 text-slate-400 hover:text-white hover:bg-sky-500 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100"
                       title="Ver documento"
+                      onClick={() => {
+                        registrarAccion('Sustentos PDF', 'DESCARGAR', `Visualizó/Descargó el archivo ${archivo.nombre}`);
+                      }}
                     >
                       <Eye size={18} />
                     </a>
