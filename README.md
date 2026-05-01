@@ -1,5 +1,11 @@
 # 🏫 Sistema de Gestión de Recursos Propios (UGEL)
 
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)
+![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
+
 Una plataforma web integral desarrollada para modernizar, gestionar y asegurar la declaración de sustentos financieros trimestrales de las Instituciones Educativas. Este sistema facilita el trabajo de los directores y automatiza la revisión por parte de los especialistas.
 
 ## ✨ Características Principales
