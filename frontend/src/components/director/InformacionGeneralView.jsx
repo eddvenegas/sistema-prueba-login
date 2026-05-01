@@ -13,7 +13,6 @@ const obtenerNombreCompleto = (director) => {
 
 const InformacionGeneralView = ({ director }) => {
   const [formData, setFormData] = useState({
-    codigo_modular: '',
     nombre_tesorero: '',
     dni_tesorero: '',
     celular_tesorero: '',
@@ -46,7 +45,6 @@ const InformacionGeneralView = ({ director }) => {
       if (result.success && result.data) {
         // Si el backend devuelve datos, poblamos el formulario
         setFormData({
-          codigo_modular: result.data.codigo_modular || '',
           nombre_tesorero: result.data.nombre_tesorero || '',
           dni_tesorero: result.data.dni_tesorero || '',
           celular_tesorero: result.data.celular_tesorero || '',
@@ -63,6 +61,14 @@ const InformacionGeneralView = ({ director }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Validación estricta para que DNI y celular solo acepten números
+    if (name === 'dni_tesorero' || name === 'celular_tesorero') {
+      if (value !== '' && !/^\d+$/.test(value)) {
+        return; // Ignorar el cambio si se ingresa algo que no es un dígito
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value
@@ -138,19 +144,6 @@ const InformacionGeneralView = ({ director }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Código Modular</label>
-                <input
-                  type="text"
-                  name="codigo_modular"
-                  value={formData.codigo_modular}
-                  onChange={handleInputChange}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all hover:border-gray-400 bg-white"
-                  placeholder="Ej: 0359323"
-                  maxLength="10"
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Nombre del Tesorero(a)</label>
                 <input
                   type="text"
@@ -172,6 +165,7 @@ const InformacionGeneralView = ({ director }) => {
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all hover:border-gray-400 bg-white"
                   placeholder="8 dígitos"
                   maxLength="8"
+                  inputMode="numeric"
                 />
               </div>
 
@@ -184,7 +178,8 @@ const InformacionGeneralView = ({ director }) => {
                   onChange={handleInputChange}
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all hover:border-gray-400 bg-white"
                   placeholder="9 dígitos"
-                  maxLength="15"
+                  maxLength="9"
+                  inputMode="numeric"
                 />
               </div>
 
@@ -207,7 +202,7 @@ const InformacionGeneralView = ({ director }) => {
                   name="numero_cuenta_corriente"
                   value={formData.numero_cuenta_corriente}
                   onChange={handleInputChange}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all hover:border-gray-400 font-mono bg-white"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all hover:border-gray-400 bg-white"
                   placeholder="Número de cuenta"
                 />
               </div>

@@ -335,6 +335,49 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     }
   };
 
+  const declararSinMovimientos = async () => {
+    if (trimestreCerrado) return;
+    if (!window.confirm(`¿Estás seguro de declarar S/. 0.00 de ingresos para el mes de ${trimestreMeses[mesActivo]}? Se borrarán las filas actuales si las hubiera.`)) return;
+
+    setSaving(true);
+    setError('');
+    setMensaje('');
+
+    try {
+      const { startDate, endDate } = obtenerRangoMes(trimestreId, mesActivo);
+      const response = await fetch(`${API_URL}/replace-range`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          directorId,
+          startDate,
+          endDate,
+          registros: [], // Un array vacío le dice al servidor que guarde 0 movimientos
+        }),
+      });
+
+      const data = await leerRespuestaJson(response);
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'No se pudo declarar en cero.');
+      }
+
+      setMensaje(`Se declaró sin movimientos el mes de ${trimestreMeses[mesActivo]}.`);
+      const key = `draft_ingresos_${directorId}_${trimestreId}_${mesActivo}`;
+      localStorage.removeItem(key);
+      setHayBorradores((prev) => ({ ...prev, [mesActivo]: false }));
+      setReloadTrigger(prev => prev + 1); // Recargar los datos para refrescar la tabla a 0
+    } catch (saveError) {
+      console.error(saveError);
+      setError(saveError.message || 'Error al declarar en cero.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Funciones placeholder para la exportación
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
@@ -345,7 +388,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text('Sistema de Gestión Financiera Educativa', 14, 28);
+    doc.text('Sistema de Gestión de Recursos Propios', 14, 28);
 
     // Filtrar filas válidas y mapear datos
     const tableData = datosMeses[mesActivo]
@@ -404,7 +447,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     ws.getCell('A1').alignment = { horizontal: 'center' };
     
     ws.mergeCells('A2:F2');
-    ws.getCell('A2').value = 'Sistema de Gestión Financiera Educativa';
+    ws.getCell('A2').value = 'Sistema de Gestión de Recursos Propios';
     ws.getCell('A2').alignment = { horizontal: 'center' };
 
     ws.addRow([]); ws.addRow([]); // Espacio debajo del título
@@ -442,6 +485,8 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
 
   const inputClass = 'w-full p-2 outline-none bg-transparent text-slate-800 font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500/20 rounded transition-all';
 
+  const limitesMesActivo = obtenerRangoMes(trimestreId, mesActivo);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="bg-white p-8 rounded-[28px] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.45)] border border-slate-200">
@@ -474,18 +519,16 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
           </h2>
           
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleDownloadPDF}
-              className="flex items-center gap-2 bg-white text-red-600 border border-red-200 px-4 py-2.5 rounded-xl text-sm hover:bg-red-50 transition-all shadow-sm font-bold"
-            >
-              <FileText size={18} /> PDF
-            </button>
-            <button
-              onClick={handleDownloadExcel}
-              className="flex items-center gap-2 bg-white text-emerald-700 border border-emerald-200 px-4 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-all shadow-sm font-bold"
-            >
-              <Download size={18} /> Excel
-            </button>
+            {!trimestreCerrado && (
+              <button
+                type="button"
+                onClick={declararSinMovimientos}
+                disabled={saving || loading}
+                className="flex items-center gap-2 bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm hover:bg-slate-300 transition-all font-bold shadow-sm disabled:opacity-50"
+              >
+                Declarar Mes en Cero
+              </button>
+            )}
             <div className="w-px h-8 bg-slate-300 mx-1"></div>
             <button
               onClick={() => agregarFila(mesActivo)}
@@ -566,6 +609,8 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
                             delete dateInputRefs.current[fila.id];
                           }
                         }}
+                        min={limitesMesActivo.startDate}
+                        max={limitesMesActivo.endDate}
                         value={fila.fecha}
                         onChange={(e) => handleInputChange(mesActivo, fila.id, 'fecha', e.target.value)}
                         disabled={trimestreCerrado}
@@ -655,7 +700,21 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
           </table>
         </div>
 
-        <div className="mt-8 flex justify-end">
+        <div className="mt-8 flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 bg-white text-red-600 border border-red-200 px-6 py-3.5 rounded-2xl hover:bg-red-50 transition-all shadow-sm font-bold uppercase tracking-wide text-sm"
+          >
+            <FileText size={20} /> Descargar PDF
+          </button>
+          <button
+            type="button"
+            onClick={handleDownloadExcel}
+            className="flex items-center gap-2 bg-white text-emerald-700 border border-emerald-200 px-6 py-3.5 rounded-2xl hover:bg-emerald-50 transition-all shadow-sm font-bold uppercase tracking-wide text-sm"
+          >
+            <Download size={20} /> Descargar Excel
+          </button>
           <button
             type="button"
             onClick={guardarMesActual}

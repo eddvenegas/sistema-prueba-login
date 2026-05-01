@@ -16,16 +16,13 @@ const DirectorSidebar = ({ activeTab, setActiveTab, onLogoutClick, onChangePassw
   return (
     <aside className="w-64 bg-white h-full border-r border-gray-100 flex flex-col p-6">
       {/* Header con Logo Institucional */}
-      <div className="mb-10 text-center">
-        {/* Aquí iría el logo real */}
-        <div className="bg-gray-200 h-10 w-24 mx-auto rounded flex items-center justify-center">
-          <img 
-            src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
-            alt="Logo UGEL" 
-            className="h-16 w-auto object-contain" 
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo+UGEL' }}
-          />
-        </div>
+      <div className="mb-10 text-center flex justify-center">
+        <img 
+          src="/logo_ugel.svg" 
+          alt="Logo UGEL" 
+          className="h-16 w-auto object-contain" 
+          onError={(e) => { e.target.style.display = 'none' }}
+        />
       </div>
 
       {/* Navegación Principal */}

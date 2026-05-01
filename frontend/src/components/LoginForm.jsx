@@ -72,8 +72,8 @@ const LoginForm = ({ onLoginSuccess }) => {
             />
           </div>
           <h1 className="text-4xl lg:text-5xl font-extrabold mb-5 leading-tight tracking-tight">
-            Gestión Financiera <br/>
-            <span className="text-blue-300">Educativa</span>
+            Gestión de Recursos <br/>
+            <span className="text-blue-300">Propios</span>
           </h1>
           <p className="text-blue-100/90 text-lg leading-relaxed font-medium">
             Plataforma oficial para la declaración de sustentos, ingresos y egresos de las Instituciones Educativas de la jurisdicción.

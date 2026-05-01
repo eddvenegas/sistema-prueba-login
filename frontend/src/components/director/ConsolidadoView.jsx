@@ -205,7 +205,7 @@ const ConsolidadoView = ({
 
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('REPORTE CONSOLIDADO TRIMESTRAL', 14, 20);
+    doc.text('INFORME ECONÓMICO TRIMESTRAL', 14, 20);
 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
@@ -225,7 +225,7 @@ const ConsolidadoView = ({
 
     autoTable(doc, {
       startY: 42,
-      head: [[{ content: '1. DETALLE DE LOS MOVIMIENTOS DE CAJA', colSpan: 2, styles: { halign: 'center', fillColor: [2, 132, 199] } }]],
+      head: [[{ content: '1. DETALLE DE LOS MOVIMIENTOS DE CAJA', colSpan: 2, styles: { halign: 'left', fillColor: [2, 132, 199] } }]],
       body: tabla1Body,
       theme: 'grid'
     });
@@ -237,7 +237,7 @@ const ConsolidadoView = ({
 
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 10,
-      head: [[{ content: '2. DETALLE DE LOS MOVIMIENTOS DE LA CUENTA CORRIENTE', colSpan: 2, styles: { halign: 'center', fillColor: [2, 132, 199] } }]],
+      head: [[{ content: '2. DETALLE DE LOS MOVIMIENTOS DE LA CUENTA CORRIENTE', colSpan: 2, styles: { halign: 'left', fillColor: [2, 132, 199] } }]],
       body: tabla2Body,
       theme: 'grid'
     });
@@ -250,7 +250,7 @@ const ConsolidadoView = ({
 
     autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 10,
-      head: [[{ content: '3. CONSOLIDADO', colSpan: 2, styles: { halign: 'center', fillColor: [2, 132, 199] } }]],
+      head: [[{ content: '3. CONSOLIDADO', colSpan: 2, styles: { halign: 'left', fillColor: [2, 132, 199] } }]],
       body: tabla3Body,
       theme: 'grid'
     });
@@ -272,7 +272,7 @@ const ConsolidadoView = ({
 
     ws.mergeCells('A1:B1');
     const titleCell = ws.getCell('A1');
-    titleCell.value = 'REPORTE CONSOLIDADO TRIMESTRAL';
+    titleCell.value = 'INFORME ECONÓMICO TRIMESTRAL';
     titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
     titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0284C7' } }; // sky-600
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -292,7 +292,7 @@ const ConsolidadoView = ({
       ws.mergeCells(`A${row.number}:B${row.number}`);
       row.getCell(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
       row.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } }; // slate-900
-      row.getCell(1).alignment = { horizontal: 'center' };
+      row.getCell(1).alignment = { horizontal: 'left' };
     };
 
     const addSubHeader = (title) => {
@@ -347,7 +347,7 @@ const ConsolidadoView = ({
 
   const tdLabelClass = 'border border-slate-300 px-4 py-3 text-sm text-slate-700';
   const tdValueClass = 'border border-slate-300 px-4 py-3 text-sm text-right font-mono text-slate-900';
-  const sectionHeaderClass = 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white px-4 py-2 font-bold text-sm uppercase tracking-[0.18em] border border-sky-700 text-center';
+  const sectionHeaderClass = 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white px-4 py-2 font-bold text-sm uppercase tracking-[0.18em] border border-sky-700 text-left';
 
   const trEditableClass = trimestreCerrado
     ? 'hover:bg-slate-50/80 transition-colors'
@@ -368,7 +368,7 @@ const ConsolidadoView = ({
             </div>
             <div className="col-span-2 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold shadow-sm">2026</div>
 
-            <div className="col-span-3 rounded-2xl font-bold bg-slate-200 p-3 border border-slate-300">Numero de la II.EE.</div>
+            <div className="col-span-3 rounded-2xl font-bold bg-slate-200 p-3 border border-slate-300">Número de la II.EE.</div>
             <div className="col-span-9 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold shadow-sm">1580</div>
 
             <div className="col-span-3 rounded-2xl font-bold bg-slate-200 p-3 border border-slate-300">Nombre de la II.EE.</div>
@@ -384,25 +384,25 @@ const ConsolidadoView = ({
               </tr>
             </thead>
             <tbody>
-              <tr><td colSpan="2" className="bg-slate-100 font-bold px-4 py-2 text-xs border border-slate-300">INGRESOS</td></tr>
+              <tr><td colSpan="2" className="bg-sky-100 font-bold px-4 py-2 text-xs border border-sky-300 text-sky-800 uppercase">INGRESOS</td></tr>
               <tr>
                 <td className={tdLabelClass}>+ Saldo inicial del trimestre</td>
                 <td className={tdValueClass}>{formatCurrency(saldoInicialCaja)}</td>
               </tr>
               {actual.meses.map((mes, index) => (
-                <tr key={mes} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={mes} className="hover:bg-sky-50/80 transition-colors">
                   <td className={tdLabelClass}>+ Correspondiente a {mes}</td>
                   <td className={tdValueClass}>{formatCurrency(movimientos.ingresos[index])}</td>
                 </tr>
               ))}
-              <tr className="bg-emerald-50/60 font-bold">
-                <td className="border border-slate-300 px-4 py-3 text-right text-xs text-emerald-900">Total Ingresos del {actual.label}</td>
+              <tr className="bg-sky-50/60 font-bold">
+                <td className="border border-slate-300 px-4 py-3 text-right text-xs text-sky-900">Total Ingresos del {actual.label}</td>
                 <td className={tdValueClass}>{formatCurrency(totalIngresos)}</td>
               </tr>
 
-              <tr><td colSpan="2" className="bg-slate-100 font-bold px-4 py-2 text-xs border border-slate-300 uppercase">EGRESOS</td></tr>
+              <tr><td colSpan="2" className="bg-rose-100 font-bold px-4 py-2 text-xs border border-rose-300 text-rose-800 uppercase">EGRESOS</td></tr>
               {actual.meses.map((mes, index) => (
-                <tr key={mes} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={mes} className="hover:bg-rose-50/80 transition-colors">
                   <td className={tdLabelClass}>- Correspondiente a {mes}</td>
                   <td className={tdValueClass}>{formatCurrency(movimientos.egresos[index])}</td>
                 </tr>
