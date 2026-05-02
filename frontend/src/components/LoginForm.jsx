@@ -52,7 +52,7 @@ const LoginForm = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-white font-sans">
+    <div className="min-h-screen flex bg-slate-50 font-sans">
         
       {/* Lado Izquierdo - Decorativo Institucional (Oculto en móviles) */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 relative overflow-hidden items-center justify-center p-12">
@@ -63,7 +63,7 @@ const LoginForm = ({ onLoginSuccess }) => {
         </div>
         
         <div className="relative z-10 text-white max-w-lg">
-          <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-md border border-white/20 inline-block mb-8 shadow-2xl">
+          <div className="bg-white p-5 rounded-3xl border border-slate-200 inline-block mb-8 shadow-2xl">
             <img 
               src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
               alt="Logo UGEL" 
@@ -88,16 +88,18 @@ const LoginForm = ({ onLoginSuccess }) => {
       </div>
 
       {/* Lado Derecho - Formulario Minimalista */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 md:p-16 bg-slate-50 lg:bg-white relative">
-        <div className="w-full max-w-md relative">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
+        <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2rem] shadow-xl border border-slate-200 relative">
           
           {/* Mostrar logo en móvil (ya que el lado izquierdo se oculta) */}
-          <div className="lg:hidden mb-10 flex justify-center">
-            <img 
-              src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
-              alt="Logo UGEL" 
-              className="h-16 w-auto object-contain" 
-            />
+          <div className="lg:hidden mb-8 flex justify-center">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <img 
+                src="https://ugelsanta.gob.pe/wp-content/uploads/2026/02/Logo_US3.png" 
+                alt="Logo UGEL" 
+                className="h-14 w-auto object-contain" 
+              />
+            </div>
           </div>
 
           <div className="mb-10 text-center lg:text-left">
@@ -115,7 +117,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                 </div>
                 <input
                   type="email"
-                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-4 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white transition-all shadow-sm"
                   placeholder="director@correo.com"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
@@ -139,7 +141,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="w-full bg-white border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-12 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all shadow-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl py-3.5 pl-11 pr-12 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white transition-all shadow-sm"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
