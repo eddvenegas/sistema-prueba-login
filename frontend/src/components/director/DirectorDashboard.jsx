@@ -58,7 +58,11 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
     '4': ['Octubre', 'Noviembre', 'Diciembre'],
   };
 
-  const anioActual = new Date().getFullYear();
+  const currentSysYear = new Date().getFullYear();
+  const [anioActual, setAnioActual] = useState(currentSysYear >= 2026 ? currentSysYear : 2026);
+  
+  const anioTope = Math.max(2026, currentSysYear) + 1; // Un año al futuro por si acaso
+  const aniosDisponibles = Array.from({ length: anioTope - 2026 + 1 }, (_, i) => 2026 + i);
   
   // Cálculos en tiempo real para las fechas de cierre
   const fechaLimite = obtenerFechaLimite(trimestreId, anioActual);
@@ -255,6 +259,17 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
           </div>
 
           <div className="flex items-center gap-4">
+      <select
+        value={anioActual}
+        onChange={(e) => setAnioActual(Number(e.target.value))}
+        disabled={cambioObligatorioPendiente}
+        className="bg-blue-50 border border-blue-200 text-blue-700 py-2 px-4 rounded-lg font-bold outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60"
+      >
+        {aniosDisponibles.map((anio) => (
+          <option key={anio} value={anio}>{anio}</option>
+        ))}
+      </select>
+
             <select
               value={trimestreId}
               onChange={(e) => setTrimestreId(e.target.value)}
@@ -373,6 +388,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
             {activeTab === 'general' && (
               <ConsolidadoView
                 trimestreId={trimestreId}
+          anio={anioActual}
                 directorId={user.director?.id}
                 schoolName={user.director?.school}
                 trimestreCerrado={esCerradoFinal}
@@ -388,6 +404,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
               <IngresosView
                 trimestreMeses={periodos[trimestreId]}
                 trimestreId={trimestreId}
+        anio={anioActual}
                 directorId={user.director?.id}
                 trimestreCerrado={esCerradoFinal}
                 schoolName={user.director?.school}
@@ -398,6 +415,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
               <EgresosView
                 trimestreMeses={periodos[trimestreId]}
                 trimestreId={trimestreId}
+        anio={anioActual}
                 directorId={user.director?.id}
                 trimestreCerrado={esCerradoFinal}
                 schoolName={user.director?.school}
@@ -408,6 +426,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
               <SubirPDFView
                 trimestreMeses={periodos[trimestreId]}
                 trimestreId={trimestreId}
+        anio={anioActual}
                 directorId={user.director?.id}
                 trimestreCerrado={esCerradoFinal}
               />

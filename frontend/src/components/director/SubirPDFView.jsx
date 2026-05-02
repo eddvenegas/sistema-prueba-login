@@ -4,7 +4,7 @@ import { buildApiUrl } from '../../config/api';
 import { registrarAccion } from '../../utils/auditHelper';
 import Toast from '../Toast';
 
-const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado }) => {
+const SubirPDFView = ({ trimestreMeses, trimestreId, anio, directorId, trimestreCerrado }) => {
   const [archivos, setArchivos] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -12,7 +12,6 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
   const [error, setError] = useState('');
   
   const etiquetaTrimestre = trimestreMeses.join(' - ').toUpperCase();
-  const anioActual = new Date().getFullYear();
 
   // Cargar los archivos desde el backend al abrir la vista o cambiar de trimestre
   useEffect(() => {
@@ -26,7 +25,7 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       try {
         const query = new URLSearchParams({
           directorId,
-          anio: anioActual,
+          anio: anio,
           trimestreId
         });
 
@@ -54,7 +53,7 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     };
 
     cargarArchivos();
-  }, [directorId, trimestreId, anioActual]);
+  }, [directorId, trimestreId, anio]);
 
   // Extraemos la lógica de subida para usarla tanto al hacer clic como al soltar el archivo
   const procesarArchivos = async (files) => {
@@ -76,7 +75,7 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       const formData = new FormData();
       formData.append('archivoPdf', file);
       formData.append('director_id', directorId);
-      formData.append('anio', anioActual);
+      formData.append('anio', anio);
       formData.append('trimestre', trimestreId);
 
       try {
@@ -187,7 +186,7 @@ const SubirPDFView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
               SUSTENTOS DE GASTO (PDF) - TRIMESTRAL
             </h2>
             <p className="text-slate-500 text-sm font-medium">
-              Sube el documento PDF consolidado con todos los sustentos correspondientes a: {etiquetaTrimestre}.
+              Sube el documento PDF consolidado con todos los sustentos correspondientes a: {etiquetaTrimestre} {anio}.
             </p>
           </div>
         </div>

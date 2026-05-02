@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Save, FileText, Download } from 'lucide-react';
 import { buildApiUrl } from '../../config/api';
 import Toast from '../Toast';
@@ -19,6 +19,7 @@ const SALDOS_API_URL = buildApiUrl('/api/movimientos/saldos-banco');
 
 const ConsolidadoView = ({
   trimestreId,
+  anio,
   directorId,
   schoolName,
   trimestreCerrado,
@@ -68,14 +69,14 @@ const ConsolidadoView = ({
 
   const formatCurrency = (val) => new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0);
 
-  const obtenerRangoTrimestre = (quarterId) => {
-    const currentYear = 2026;
+  const obtenerRangoTrimestre = useCallback((quarterId) => {
+    const currentYear = Number(anio);
     const startMonth = (Number(quarterId) - 1) * 3;
     const startDate = new Date(currentYear, startMonth, 1);
     const endDate = new Date(currentYear, startMonth + 3, 0);
     const formatear = (date) => date.toISOString().split('T')[0];
     return { startDate: formatear(startDate), endDate: formatear(endDate), startMonth };
-  };
+  }, [anio]);
 
   // Cargar ingresos y egresos para la Seccion 1 y 3
   useEffect(() => {
@@ -111,7 +112,7 @@ const ConsolidadoView = ({
       }
     };
     cargarMovimientos();
-  }, [directorId, trimestreId]);
+  }, [directorId, trimestreId, obtenerRangoTrimestre]);
 
   // Cargar los saldos de la base de datos al abrir o cambiar trimestre
   useEffect(() => {
@@ -122,7 +123,7 @@ const ConsolidadoView = ({
         const query = new URLSearchParams({
           directorId: String(directorId),
           trimestreId: String(trimestreId),
-          anio: '2026'
+          anio: String(anio)
         });
 
         const res = await fetch(`${SALDOS_API_URL}?${query.toString()}`, {
@@ -146,7 +147,7 @@ const ConsolidadoView = ({
     };
 
     cargarSaldos();
-  }, [directorId, trimestreId]);
+  }, [directorId, trimestreId, anio]);
 
   // Guardar los saldos en la base de datos
   const guardarSaldos = async () => {
@@ -166,7 +167,7 @@ const ConsolidadoView = ({
         body: JSON.stringify({
           directorId,
           trimestreId,
-          anio: 2026,
+          anio: Number(anio),
           // Convertimos al formato que probablemente espera tu base de datos
           saldos: {
             saldo_inicial: saldosBanco.inicial || 0,
@@ -210,7 +211,7 @@ const ConsolidadoView = ({
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(`Institucion Educativa: ${schoolName || 'No disponible'}`, 14, 28);
-    doc.text(`Periodo: ${actual.label} 2026`, 14, 34);
+    doc.text(`Periodo: ${actual.label} ${anio}`, 14, 34);
 
     const tabla1Body = [
       [{ content: 'INGRESOS', colSpan: 2, styles: { fillColor: [241, 245, 249], fontStyle: 'bold', textColor: [15, 23, 42] } }],
@@ -245,7 +246,7 @@ const ConsolidadoView = ({
     const tabla3Body = [
       ['Dinero en Caja', `S/. ${formatCurrency(dineroEnCaja)}`],
       ['Dinero en Cuenta Corriente del Banco de la Nacion', `S/. ${formatCurrency(dineroEnBanco)}`],
-      [{ content: `Saldo de Dinero, al ${actual.fin} 2026`, styles: { fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255] } }, { content: `S/. ${formatCurrency(saldoDineroTotal)}`, styles: { fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255], halign: 'right' } }]
+      [{ content: `Saldo de Dinero, al ${actual.fin} ${anio}`, styles: { fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255] } }, { content: `S/. ${formatCurrency(saldoDineroTotal)}`, styles: { fillColor: [15, 23, 42], fontStyle: 'bold', textColor: [255, 255, 255], halign: 'right' } }]
     ];
 
     autoTable(doc, {
@@ -282,7 +283,7 @@ const ConsolidadoView = ({
     ws.getCell('A2').font = { bold: true };
 
     ws.mergeCells('A3:B3');
-    ws.getCell('A3').value = `Periodo: ${actual.label} 2026`;
+    ws.getCell('A3').value = `Periodo: ${actual.label} ${anio}`;
     ws.getCell('A3').font = { bold: true };
 
     ws.addRow([]); // Fila 4 de separación
@@ -322,7 +323,7 @@ const ConsolidadoView = ({
     addSectionHeader('3. CONSOLIDADO');
     ws.addRow(['Dinero en Caja', Number(dineroEnCaja)]);
     ws.addRow(['Dinero en Cuenta Corriente del Banco de la Nación', Number(dineroEnBanco)]);
-    const rowTotal = ws.addRow([`Saldo de Dinero, al ${actual.fin} 2026`, Number(saldoDineroTotal)]);
+    const rowTotal = ws.addRow([`Saldo de Dinero, al ${actual.fin} ${anio}`, Number(saldoDineroTotal)]);
     rowTotal.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
     rowTotal.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } });
 
@@ -366,7 +367,7 @@ const ConsolidadoView = ({
             <div className="col-span-7 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold uppercase shadow-sm">
               {actual.meses.join(', ')}
             </div>
-            <div className="col-span-2 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold shadow-sm">2026</div>
+            <div className="col-span-2 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold shadow-sm">{anio}</div>
 
             <div className="col-span-3 rounded-2xl font-bold bg-slate-200 p-3 border border-slate-300">Número de la II.EE.</div>
             <div className="col-span-9 rounded-2xl p-3 border border-slate-300 bg-white text-center font-bold shadow-sm">1580</div>
@@ -506,7 +507,7 @@ const ConsolidadoView = ({
                 </td>
               </tr>
               <tr className="bg-slate-900 text-white font-bold">
-                <td className="border border-slate-700 px-4 py-3 text-right">Saldo de Dinero, al {actual.fin} 2026</td>
+              <td className="border border-slate-700 px-4 py-3 text-right">Saldo de Dinero, al {actual.fin} {anio}</td>
                 <td className="border border-slate-700 px-4 py-3 text-right font-mono text-sky-400">
                   {formatCurrency(saldoDineroTotal)}
                 </td>

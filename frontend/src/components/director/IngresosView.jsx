@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Plus, Save, CalendarDays, X, Download, FileText } from 'lucide-react';
 import { buildApiUrl } from '../../config/api';
 import Toast from '../Toast';
@@ -70,7 +70,7 @@ const leerRespuestaJson = async (response) => {
   }
 };
 
-const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrado, schoolName }) => {
+const IngresosView = ({ trimestreMeses, trimestreId, anio, directorId, trimestreCerrado, schoolName }) => {
   const dateInputRefs = useRef({});
   const [mesActivo, setMesActivo] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -106,8 +106,8 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     setMesActivo(0);
   }, [trimestreId]);
 
-  const obtenerRangoMes = (quarterId, monthOffset) => {
-    const currentYear = new Date().getFullYear();
+  const obtenerRangoMes = useCallback((quarterId, monthOffset) => {
+    const currentYear = Number(anio);
     const quarterStartMonth = (Number(quarterId) - 1) * 3;
     const monthIndex = quarterStartMonth + monthOffset;
     const startDate = new Date(currentYear, monthIndex, 1);
@@ -119,7 +119,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
       endDate: formatear(endDate),
       monthNumber: monthIndex,
     };
-  };
+  }, [anio]);
 
   useEffect(() => {
     const cargarIngresos = async () => {
@@ -194,7 +194,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     };
 
     cargarIngresos();
-  }, [directorId, trimestreId, reloadTrigger, trimestreCerrado]);
+  }, [directorId, trimestreId, reloadTrigger, trimestreCerrado, obtenerRangoMes]);
 
   const handleInputChange = (mesIndex, filaId, campo, valor) => {
     setDatosMeses((prevDatos) => {
@@ -384,7 +384,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(`RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`, 14, 20);
+    doc.text(`RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()} ${anio}`, 14, 20);
     
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
@@ -442,7 +442,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
     ];
 
     ws.mergeCells('A1:F1');
-    ws.getCell('A1').value = `RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()}`;
+    ws.getCell('A1').value = `RELACIÓN DE INGRESOS - ${trimestreMeses[mesActivo].toUpperCase()} ${anio}`;
     ws.getCell('A1').font = { size: 14, bold: true };
     ws.getCell('A1').alignment = { horizontal: 'center' };
     
@@ -515,7 +515,7 @@ const IngresosView = ({ trimestreMeses, trimestreId, directorId, trimestreCerrad
 
         <div className="flex justify-between items-center mb-6 rounded-3xl border border-slate-300 bg-slate-50/80 p-5 shadow-sm">
           <h2 className="text-lg font-bold text-slate-800 uppercase tracking-wide">
-            RELACIÓN DE INGRESOS - {trimestreMeses[mesActivo].toUpperCase()}
+            RELACIÓN DE INGRESOS - {trimestreMeses[mesActivo].toUpperCase()} {anio}
           </h2>
           
           <div className="flex items-center gap-3">
