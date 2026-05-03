@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, FolderOpen, UploadCloud, LogOut, Settings, Key, Moon, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, UploadCloud, LogOut, Settings, Key, Moon, HelpCircle, UserMinus } from 'lucide-react';
 
-const DirectorSidebar = ({ activeTab, setActiveTab, onLogoutClick, onChangePasswordClick }) => {
+const DirectorSidebar = ({ activeTab, setActiveTab, onLogoutClick, onChangePasswordClick, onRequestReplacementClick }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Las opciones de tu menú actual
@@ -61,6 +61,16 @@ const DirectorSidebar = ({ activeTab, setActiveTab, onLogoutClick, onChangePassw
                 <span>Cambiar Contraseña</span>
               </button>
               <button
+            onClick={() => {
+              onRequestReplacementClick();
+              setIsSettingsOpen(false);
+            }}
+            className="w-full flex items-center justify-start space-x-3 px-3 py-2.5 rounded-lg text-sm text-left text-gray-700 hover:bg-slate-50 transition-colors"
+          >
+            <UserMinus size={16} className="text-slate-500" />
+            <span>Solicitar Reemplazo de Director</span>
+          </button>
+          <button
                 onClick={() => {
                   alert("El Modo Oscuro estará disponible próximamente.");
                   setIsSettingsOpen(false);

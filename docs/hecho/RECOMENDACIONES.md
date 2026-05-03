@@ -20,10 +20,5 @@ Sustituir los recuadros de mensajes estáticos de éxito o error que empujan el 
 Asegurarnos de que las rutas del backend estén protegidas contra accesos no autorizados.
 **Objetivo:** Implementar JSON Web Tokens (JWT) para que cuando el frontend solicite datos (ej. cargar ingresos/egresos), el servidor verifique la identidad del usuario a través del token de sesión. Esto previene que usuarios malintencionados fuercen peticiones escribiendo la URL de la API directamente.
 
-## 5. Descarga de Respaldos (Backups) 💾
+## 5. Descarga de Respaldos (Backups) 💾 *(Implementado ✅)*
 Brindar la posibilidad al administrador / especialista de descargar un volcado total de la base de datos en caso de emergencia.
-
----
-
-### 📝 Estado Actual del Proyecto
-¡Excelente progreso! Prácticamente todas las funcionalidades clave iniciales se han completado con éxito de forma profesional. El siguiente paso natural en el desarrollo sería enfocarse en la **Descarga de Respaldos** y comenzar a darle vida a la **Vista del Especialista UGEL**, para que los administradores puedan revisar los archivos que los directores acaban de subir.

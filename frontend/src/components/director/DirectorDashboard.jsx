@@ -4,6 +4,7 @@ import DirectorSidebar from './DirectorSidebar';
 import LogoutModal from '../LogoutModal';
 import ChangePasswordModal from '../ChangePasswordModal';
 import CerrarTrimestreModal from './CerrarTrimestreModal';
+import SolicitudReemplazoModal from './SolicitudReemplazoModal';
 import ConsolidadoView from './ConsolidadoView';
 import InformacionGeneralView from './InformacionGeneralView';
 import IngresosView from './IngresosView';
@@ -40,6 +41,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isCerrarTrimestreOpen, setIsCerrarTrimestreOpen] = useState(false);
+  const [isSolicitudReemplazoOpen, setIsSolicitudReemplazoOpen] = useState(false);
   const [trimestreCerrado, setTrimestreCerrado] = useState(false);
   const [cerrandoTrimestre, setCerrandoTrimestre] = useState(false);
   const [cerradoEn, setCerradoEn] = useState(null);
@@ -243,6 +245,7 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
         setActiveTab={setActiveTab}
         onLogoutClick={() => setIsLogoutModalOpen(true)}
         onChangePasswordClick={() => setIsChangePasswordOpen(true)}
+        onRequestReplacementClick={() => setIsSolicitudReemplazoOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto p-10">
@@ -461,6 +464,12 @@ const DirectorDashboard = ({ user, onLogout, onUserUpdate }) => {
           onConfirm={handleCerrarTrimestre}
           loading={cerrandoTrimestre}
         />
+
+      <SolicitudReemplazoModal
+        isOpen={isSolicitudReemplazoOpen}
+        onClose={() => setIsSolicitudReemplazoOpen(false)}
+        director={user.director}
+      />
       </main>
     </div>
   );

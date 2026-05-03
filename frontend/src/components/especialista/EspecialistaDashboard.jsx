@@ -3,6 +3,7 @@ import { Search, Folder, LogOut, LayoutDashboard, FileText, Settings, User, Cale
 import ColegioDetalle from './ColegioDetalle';
 import ExcelJS from 'exceljs';
 import ChangePasswordModal from '../ChangePasswordModal';
+import EspecialistaSolicitudesView from './EspecialistaSolicitudesView';
 
 const EspecialistaDashboard = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,6 +155,13 @@ const EspecialistaDashboard = ({ user, onLogout }) => {
             <span className="font-medium">Estadísticas</span>
           </button>
           <button 
+            onClick={() => { setActiveView('credenciales'); setSelectedColegio(null); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors shadow-sm ${activeView === 'credenciales' ? 'bg-blue-600 text-white' : 'text-blue-200 hover:bg-blue-900/50 hover:text-white'}`}
+          >
+            <Key size={20} />
+            <span className="font-medium">Credenciales</span>
+          </button>
+          <button 
             onClick={() => { setActiveView('configuracion'); setSelectedColegio(null); }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors shadow-sm ${activeView === 'configuracion' ? 'bg-blue-600 text-white' : 'text-blue-200 hover:bg-blue-900/50 hover:text-white'}`}
           >
@@ -185,7 +193,16 @@ const EspecialistaDashboard = ({ user, onLogout }) => {
 
       {/* Contenido Principal */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {activeView === 'reportes' ? (
+        {activeView === 'credenciales' ? (
+          <>
+            <header className="bg-white shadow-sm px-8 py-5 flex items-center justify-between z-10 border-b border-slate-200">
+              <h1 className="text-2xl font-bold text-slate-800">Solicitudes de Credenciales</h1>
+            </header>
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
+              <EspecialistaSolicitudesView />
+            </div>
+          </>
+        ) : activeView === 'reportes' ? (
           /* --- VISTA DE REPORTES Y ESTADÍSTICAS --- */
           <>
             <header className="bg-white shadow-sm px-8 py-5 flex items-center justify-between z-10 border-b border-slate-200">

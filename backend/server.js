@@ -10,6 +10,8 @@ const datosInstitucionalesRoutes = require('./routes/datosInstitucionales');
 const especialistaRoutes = require('./routes/especialistaRoutes');
 const notificacionesRoutes = require('./routes/notificacionesRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const solicitudesRoutes = require('./routes/solicitudesRoutes');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +38,8 @@ app.use('/api/datos-institucionales', datosInstitucionalesRoutes);
 app.use('/api/especialista', especialistaRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/solicitudes-reemplazo', solicitudesRoutes);
+
 
 // Ruta de prueba
 app.get('/', (req, res) => {
